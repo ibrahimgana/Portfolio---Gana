@@ -42,6 +42,71 @@
             font-family: var(--serif);
         }
 
+        /* ══════════════════════════════════════════════════
+     AUDIO TOGGLE
+     ══════════════════════════════════════════════════ */
+        .sound-toggle {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 10;
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border: 1px solid var(--grey);
+            padding: 10px 14px;
+            background: var(--ivory);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s var(--ease);
+            opacity: 0;
+            pointer-events: none;
+            cursor: pointer;
+        }
+
+        body.loaded .sound-toggle {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sound-toggle:hover,
+        .sound-toggle.is-playing {
+            color: var(--burgundy);
+            border-color: var(--burgundy);
+        }
+
+        .sound-icon {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            transition: background 0.3s;
+        }
+
+        .sound-toggle.is-playing .sound-icon {
+            animation: pulse-audio 2s infinite;
+        }
+
+        @keyframes pulse-audio {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
         /* Canvas covers the entire screen, acting as the background and interactive layer */
         #canvas {
             position: fixed;
@@ -133,6 +198,11 @@
             .headline {
                 font-size: clamp(2.2rem, 8vw, 3rem);
             }
+
+            .sound-toggle {
+                bottom: 16px;
+                left: 16px;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -149,6 +219,19 @@
 
 <body>
 
+    <!-- Background Audio -->
+    <audio id="bgMusic" loop>
+        <source
+            src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+            type="audio/mpeg">
+    </audio>
+
+    <!-- Audio Toggle Button -->
+    <button class="sound-toggle" id="soundToggle" aria-label="Toggle Background Music">
+        <span class="sound-icon"></span>
+        <span id="soundText">Audio: Off</span>
+    </button>
+
     <canvas id="canvas"></canvas>
 
     <div class="overlay">
@@ -162,19 +245,70 @@
         (() => {
             'use strict';
 
+            /* ══════════════════════════════════════════════════
+               AUDIO CONTROLS
+               ══════════════════════════════════════════════════ */
+            const audio = document.getElementById('bgMusic');
+            const soundToggle = document.getElementById('soundToggle');
+            const soundText = document.getElementById('soundText');
+            let isAudioPlaying = false;
+
+            // Set a comfortable background volume
+            audio.volume = 0.35;
+
+            function playAudio() {
+                audio.play().then(() => {
+                    isAudioPlaying = true;
+                    soundToggle.classList.add('is-playing');
+                    soundText.textContent = 'Audio: On';
+                }).catch(e => {
+                    console.log('Audio playback blocked by browser. Waiting for interaction.');
+                });
+            }
+
+            function pauseAudio() {
+                audio.pause();
+                isAudioPlaying = false;
+                soundToggle.classList.remove('is-playing');
+                soundText.textContent = 'Audio: Off';
+            }
+
+            soundToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (isAudioPlaying) pauseAudio();
+                else playAudio();
+            });
+
+            // Browsers require a user interaction to play sound.
+            // We listen for the very first click or move to start the music.
+            const unlockAudio = () => {
+                if (!isAudioPlaying) playAudio();
+                document.removeEventListener('pointerdown', unlockAudio);
+                document.removeEventListener('pointermove', unlockAudio);
+                document.removeEventListener('keydown', unlockAudio);
+            };
+            document.addEventListener('pointerdown', unlockAudio);
+            document.addEventListener('pointermove', unlockAudio);
+            document.addEventListener('keydown', unlockAudio);
+
+            // Add loaded class for the sound toggle fade-in
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 1000);
+
+            /* ══════════════════════════════════════════════════
+               PARTICLE NETWORK
+               ══════════════════════════════════════════════════ */
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
             const hint = document.getElementById('hint');
 
             let W = 0, H = 0, DPR = 1;
-            let cx = 0, cy = 0;
 
             // Configuration
             const PARTICLE_COUNT = window.innerWidth < 768 ? 45 : 85;
             const MAX_DIST = 180;
             const MOUSE_RADIUS = 180;
-            const MOUSE_FORCE = 0.04;
-            const IDLE_FORCE = 0.015;
 
             // Theme colors
             const COLORS = [
@@ -187,13 +321,11 @@
             const particles = [];
             const mouse = { x: -1000, y: -1000, active: false, isDown: false };
 
-            let introComplete = false;
             let firstInteraction = false;
 
             class Particle {
                 constructor() {
                     this.reset();
-                    // Scatter initially
                     this.x = Math.random() * W;
                     this.y = Math.random() * H;
                 }
@@ -205,15 +337,13 @@
                     this.vy = (Math.random() - 0.5) * 0.5;
                     this.size = Math.random() * 2 + 1.5;
                     this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
-
-                    // Internal drift targets to keep them moving organically
                     this.tx = this.x;
                     this.ty = this.y;
                     this.driftTimer = Math.random() * 200;
                 }
 
                 update() {
-                    // 1. Organic drift
+                    // Organic drift
                     this.driftTimer--;
                     if (this.driftTimer <= 0) {
                         this.tx = Math.random() * W;
@@ -221,13 +351,12 @@
                         this.driftTimer = 200 + Math.random() * 300;
                     }
 
-                    // Gentle pull towards drift target
                     const dxTarget = this.tx - this.x;
                     const dyTarget = this.ty - this.y;
                     this.vx += dxTarget * 0.0001;
                     this.vy += dyTarget * 0.0001;
 
-                    // 2. Mouse interaction
+                    // Mouse interaction
                     if (mouse.active) {
                         const dx = mouse.x - this.x;
                         const dy = mouse.y - this.y;
@@ -239,11 +368,9 @@
                             const directionY = dy / dist;
 
                             if (mouse.isDown) {
-                                // Push away on drag/touch
                                 this.vx -= directionX * force * 2;
                                 this.vy -= directionY * force * 2;
                             } else {
-                                // Gently attract on hover
                                 this.vx += directionX * force * 0.5;
                                 this.vy += directionY * force * 0.5;
                             }
@@ -281,9 +408,6 @@
                 canvas.style.width = W + 'px';
                 canvas.style.height = H + 'px';
                 ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-                cx = W / 2;
-                cy = H / 2;
             }
 
             function initParticles() {
@@ -294,7 +418,6 @@
             }
 
             function drawLines() {
-                // Draw connections between nearby particles
                 for (let i = 0; i < particles.length; i++) {
                     for (let j = i + 1; j < particles.length; j++) {
                         const p1 = particles[i];
@@ -306,7 +429,6 @@
                         if (dist < MAX_DIST) {
                             const alpha = (1 - dist / MAX_DIST) * 0.15;
 
-                            // Highlight connections near the mouse
                             let highlight = 0;
                             if (mouse.active) {
                                 const mdx = mouse.x - (p1.x + p2.x) / 2;
@@ -337,7 +459,6 @@
             function animate() {
                 ctx.clearRect(0, 0, W, H);
 
-                // Update and draw
                 for (const p of particles) {
                     p.update();
                 }
@@ -354,7 +475,6 @@
             /* ══════════════════════════════════════════════════
                INTERACTION EVENTS
                ══════════════════════════════════════════════════ */
-
             function handlePointerDown(e) {
                 mouse.active = true;
                 mouse.isDown = true;
@@ -391,7 +511,6 @@
                 mouse.y = e.clientY - rect.top;
             }
 
-            // Setup listeners
             window.addEventListener('resize', () => { resize(); initParticles(); });
 
             canvas.addEventListener('pointerdown', handlePointerDown);
@@ -399,12 +518,10 @@
             canvas.addEventListener('pointermove', handlePointerMove);
             document.addEventListener('pointerleave', handlePointerLeave);
 
-            // Show hint after a brief delay
             setTimeout(() => {
                 if (!firstInteraction) hint.classList.add('visible');
             }, 2000);
 
-            // Start
             resize();
             initParticles();
             requestAnimationFrame(animate);
