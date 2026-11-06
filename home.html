@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Something is taking shape.</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --ivory: #F9F8F6;
+            --charcoal: #1C1B1A;
+            --burgundy: #722F37;
+            --copper: #B87333;
+            --navy: #1A2436;
+            --grey: #D7D3CC;
+            --muted: #8A857E;
+
+            --serif: 'Instrument Serif', ui-serif, Georgia, serif;
+            --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+            --ease: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: var(--ivory);
+            color: var(--charcoal);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-family: var(--serif);
+        }
+
+        /* ══════════════════════════════════════════════════
+     AUDIO TOGGLE
+     ══════════════════════════════════════════════════ */
+        .sound-toggle {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 10;
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border: 1px solid var(--grey);
+            padding: 10px 14px;
+            background: var(--ivory);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s var(--ease);
+            opacity: 0;
+            pointer-events: none;
+            cursor: pointer;
+        }
+
+        body.loaded .sound-toggle {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sound-toggle:hover,
+        .sound-toggle.is-playing {
+            color: var(--burgundy);
+            border-color: var(--burgundy);
+        }
+
+        .sound-icon {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            transition: background 0.3s;
+        }
+
+        .sound-toggle.is-playing .sound-icon {
+            animation: pulse-audio 2s infinite;
+        }
+
+        @keyframes pulse-audio {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Canvas covers the entire screen, acting as the background and interactive layer */
+        #canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            touch-action: none;
+            /* Prevent default touch scrolling */
+        }
+
+        /* UI Overlay */
+        .overlay {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            pointer-events: none;
+            /* Let clicks pass through to canvas */
+            padding: 24px;
+            text-align: center;
+        }
+
+        .headline {
+            font-size: clamp(2.8rem, 6vw, 5.5rem);
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin: 0 0 32px 0;
+            max-width: 800px;
+            opacity: 0;
+            transform: translateY(16px);
+            animation: fadeUp 1.6s var(--ease) 0.2s forwards;
+        }
+
+        .headline em {
+            font-style: italic;
+            color: var(--burgundy);
+        }
+
+        .subhead {
+            font-family: var(--mono);
+            font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 0;
+            opacity: 0;
+            transform: translateY(12px);
+            animation: fadeUp 1.6s var(--ease) 0.5s forwards;
+        }
+
+        /* Subtle instruction hint */
+        .hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--grey);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s var(--ease);
+        }
+
+        .hint.visible {
+            opacity: 1;
+        }
+
+        .hint.fade-out {
+            opacity: 0;
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .headline {
+                font-size: clamp(2.2rem, 8vw, 3rem);
+            }
+
+            .sound-toggle {
+                bottom: 16px;
+                left: 16px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .headline,
+            .subhead {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background Audio -->
+    <audio id="bgMusic" loop>
+        <source
+            src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
+            type="audio/mpeg">
+    </audio>
+
+    <!-- Audio Toggle Button -->
+    <button class="sound-toggle" id="soundToggle" aria-label="Toggle Background Music">
+        <span class="sound-icon"></span>
+        <span id="soundText">Audio: Off</span>
+    </button>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="overlay">
+        <h1 class="headline">Something is<br><em>taking shape.</em></h1>
+        <p class="subhead">Coming soon</p>
+    </div>
+
+    <div class="hint" id="hint">Move to interact</div>
+
+    <script>
+        (() => {
+            'use strict';
+
+            /* ══════════════════════════════════════════════════
+               AUDIO CONTROLS
+               ══════════════════════════════════════════════════ */
+            const audio = document.getElementById('bgMusic');
+            const soundToggle = document.getElementById('soundToggle');
+            const soundText = document.getElementById('soundText');
+            let isAudioPlaying = false;
+
+            // Set a comfortable background volume
+            audio.volume = 0.35;
+
+            function playAudio() {
+                audio.play().then(() => {
+                    isAudioPlaying = true;
+                    soundToggle.classList.add('is-playing');
+                    soundText.textContent = 'Audio: On';
+                }).catch(e => {
+                    console.log('Audio playback blocked by browser. Waiting for interaction.');
+                });
+            }
+
+            function pauseAudio() {
+                audio.pause();
+                isAudioPlaying = false;
+                soundToggle.classList.remove('is-playing');
+                soundText.textContent = 'Audio: Off';
+            }
+
+            soundToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (isAudioPlaying) pauseAudio();
+                else playAudio();
+            });
+
+            // Browsers require a user interaction to play sound.
+            // We listen for the very first click or move to start the music.
+            const unlockAudio = () => {
+                if (!isAudioPlaying) playAudio();
+                document.removeEventListener('pointerdown', unlockAudio);
+                document.removeEventListener('pointermove', unlockAudio);
+                document.removeEventListener('keydown', unlockAudio);
+            };
+            document.addEventListener('pointerdown', unlockAudio);
+            document.addEventListener('pointermove', unlockAudio);
+            document.addEventListener('keydown', unlockAudio);
+
+            // Add loaded class for the sound toggle fade-in
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 1000);
+
+            /* ══════════════════════════════════════════════════
+               PARTICLE NETWORK
+               ══════════════════════════════════════════════════ */
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const hint = document.getElementById('hint');
+
+            let W = 0, H = 0, DPR = 1;
+
+            // Configuration
+            const PARTICLE_COUNT = window.innerWidth < 768 ? 45 : 85;
+            const MAX_DIST = 180;
+            const MOUSE_RADIUS = 180;
+
+            // Theme colors
+            const COLORS = [
+                { r: 28, g: 27, b: 26, a: 0.6 },    // Charcoal
+                { r: 114, g: 47, b: 55, a: 0.6 },   // Burgundy
+                { r: 184, g: 115, b: 51, a: 0.5 },  // Copper
+                { r: 26, g: 36, b: 54, a: 0.5 }     // Navy
+            ];
+
+            const particles = [];
+            const mouse = { x: -1000, y: -1000, active: false, isDown: false };
+
+            let firstInteraction = false;
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                    this.x = Math.random() * W;
+                    this.y = Math.random() * H;
+                }
+
+                reset() {
+                    this.x = Math.random() * W;
+                    this.y = Math.random() * H;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2 + 1.5;
+                    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+                    this.tx = this.x;
+                    this.ty = this.y;
+                    this.driftTimer = Math.random() * 200;
+                }
+
+                update() {
+                    // Organic drift
+                    this.driftTimer--;
+                    if (this.driftTimer <= 0) {
+                        this.tx = Math.random() * W;
+                        this.ty = Math.random() * H;
+                        this.driftTimer = 200 + Math.random() * 300;
+                    }
+
+                    const dxTarget = this.tx - this.x;
+                    const dyTarget = this.ty - this.y;
+                    this.vx += dxTarget * 0.0001;
+                    this.vy += dyTarget * 0.0001;
+
+                    // Mouse interaction
+                    if (mouse.active) {
+                        const dx = mouse.x - this.x;
+                        const dy = mouse.y - this.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < MOUSE_RADIUS) {
+                            const force = (1 - dist / MOUSE_RADIUS);
+                            const directionX = dx / dist;
+                            const directionY = dy / dist;
+
+                            if (mouse.isDown) {
+                                this.vx -= directionX * force * 2;
+                                this.vy -= directionY * force * 2;
+                            } else {
+                                this.vx += directionX * force * 0.5;
+                                this.vy += directionY * force * 0.5;
+                            }
+                        }
+                    }
+
+                    // Apply velocity and friction
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.96;
+                    this.vy *= 0.96;
+
+                    // Bounce off edges
+                    if (this.x < 0) { this.x = 0; this.vx *= -1; }
+                    if (this.x > W) { this.x = W; this.vx *= -1; }
+                    if (this.y < 0) { this.y = 0; this.vy *= -1; }
+                    if (this.y > H) { this.y = H; this.vy *= -1; }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.color.a})`;
+                    ctx.fill();
+                }
+            }
+
+            function resize() {
+                DPR = Math.min(window.devicePixelRatio || 1, 2);
+                W = window.innerWidth;
+                H = window.innerHeight;
+
+                canvas.width = W * DPR;
+                canvas.height = H * DPR;
+                canvas.style.width = W + 'px';
+                canvas.style.height = H + 'px';
+                ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+            }
+
+            function initParticles() {
+                particles.length = 0;
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function drawLines() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p1 = particles[i];
+                        const p2 = particles[j];
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < MAX_DIST) {
+                            const alpha = (1 - dist / MAX_DIST) * 0.15;
+
+                            let highlight = 0;
+                            if (mouse.active) {
+                                const mdx = mouse.x - (p1.x + p2.x) / 2;
+                                const mdy = mouse.y - (p1.y + p2.y) / 2;
+                                const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+                                if (mDist < MOUSE_RADIUS) {
+                                    highlight = (1 - mDist / MOUSE_RADIUS) * 0.4;
+                                }
+                            }
+
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+
+                            if (highlight > 0) {
+                                ctx.strokeStyle = `rgba(114, 47, 55, ${alpha + highlight})`;
+                                ctx.lineWidth = 1.2;
+                            } else {
+                                ctx.strokeStyle = `rgba(28, 27, 26, ${alpha})`;
+                                ctx.lineWidth = 1;
+                            }
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, W, H);
+
+                for (const p of particles) {
+                    p.update();
+                }
+
+                drawLines();
+
+                for (const p of particles) {
+                    p.draw();
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            /* ══════════════════════════════════════════════════
+               INTERACTION EVENTS
+               ══════════════════════════════════════════════════ */
+            function handlePointerDown(e) {
+                mouse.active = true;
+                mouse.isDown = true;
+                updateMousePos(e);
+
+                if (!firstInteraction) {
+                    firstInteraction = true;
+                    hint.classList.add('fade-out');
+                }
+            }
+
+            function handlePointerUp() {
+                mouse.isDown = false;
+            }
+
+            function handlePointerMove(e) {
+                mouse.active = true;
+                updateMousePos(e);
+
+                if (!firstInteraction) {
+                    firstInteraction = true;
+                    hint.classList.add('fade-out');
+                }
+            }
+
+            function handlePointerLeave() {
+                mouse.active = false;
+                mouse.isDown = false;
+            }
+
+            function updateMousePos(e) {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            }
+
+            window.addEventListener('resize', () => { resize(); initParticles(); });
+
+            canvas.addEventListener('pointerdown', handlePointerDown);
+            window.addEventListener('pointerup', handlePointerUp);
+            canvas.addEventListener('pointermove', handlePointerMove);
+            document.addEventListener('pointerleave', handlePointerLeave);
+
+            setTimeout(() => {
+                if (!firstInteraction) hint.classList.add('visible');
+            }, 2000);
+
+            resize();
+            initParticles();
+            requestAnimationFrame(animate);
+
+        })();
+    </script>
+</body>
+
+</html>
