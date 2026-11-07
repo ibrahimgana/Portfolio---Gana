@@ -7,43 +7,6 @@
   }
 
   /* ══════════════════════════════════════════════════
-     AUDIO CONTROLS
-     ══════════════════════════════════════════════════ */
-  const audio = document.getElementById('bgMusic');
-  const soundToggle = document.getElementById('soundToggle');
-  const soundText = document.getElementById('soundText');
-  let isAudioPlaying = false;
-  audio.volume = 0.35;
-
-  function playAudio() {
-    audio.play().then(() => {
-      isAudioPlaying = true;
-      soundToggle.classList.add('is-playing');
-      soundText.textContent = 'Audio: On';
-    }).catch(e => console.log('Audio blocked.'));
-  }
-
-  function pauseAudio() {
-    audio.pause();
-    isAudioPlaying = false;
-    soundToggle.classList.remove('is-playing');
-    soundText.textContent = 'Audio: Off';
-  }
-
-  soundToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    isAudioPlaying ? pauseAudio() : playAudio();
-  });
-
-  const unlockAudio = () => {
-    if (!isAudioPlaying) playAudio();
-    document.removeEventListener('pointerdown', unlockAudio);
-    document.removeEventListener('keydown', unlockAudio);
-  };
-  document.addEventListener('pointerdown', unlockAudio);
-  document.addEventListener('keydown', unlockAudio);
-
-  /* ══════════════════════════════════════════════════
      DATA & STATE
      ══════════════════════════════════════════════════ */
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -55,16 +18,19 @@
 
   const NS = 'http://www.w3.org/2000/svg';
 
-  // 5 Orbiting Nodes
+  // 4 Orbiting Nodes (Who Am I, Work, The Shelf, Notes)
   const NODES = [
-    { id: 'about',   label: 'Who Am I?', angle: -1.57, rad: 0.82, speed:  0.045, size: 7.5, title: 'Who Am I?',  desc: 'My personal story, background, experiences, interests, values and how I think.' },
-    { id: 'notes',   label: 'Notes',     angle: -0.31, rad: 0.75, speed: -0.038, size: 7,   title: 'Notes',      desc: 'My writing archive, including articles, reflections, observations and essays.' },
-    { id: 'work',    label: 'Work',      angle:  0.94, rad: 0.88, speed:  0.035, size: 8,   title: 'Work',       desc: 'My projects, products, experiments and things I have designed or built.' },
-    { id: 'reading', label: 'The Shelf', angle:  2.20, rad: 0.80, speed: -0.052, size: 7,   title: 'The Shelf',  desc: 'My reading collection, including books I am currently reading and books I have read.' },
-    { id: 'contact', label: 'Say Hello', angle:  3.45, rad: 0.70, speed:  0.040, size: 6.5, title: 'Say Hello',  desc: 'Get in touch with me for collaborations, conversations or just to say hi.' }
+    { id: 'about',   label: 'Who Am I?', angle: -1.90, rad: 0.80, speed:  0.038, size: 7.5, title: 'Who Am I?',  desc: 'My story, systems thinking philosophy, background and engineering values.' },
+    { id: 'work',    label: 'Work',      angle: -0.45, rad: 0.86, speed: -0.032, size: 8.0, title: 'Work',       desc: 'Selected projects, products, architectures and experiments I have built.' },
+    { id: 'reading', label: 'The Shelf', angle:  1.05, rad: 0.78, speed:  0.035, size: 7.0, title: 'The Shelf',  desc: 'Books I am reading, library archive, and distilled margin notes.' },
+    { id: 'notes',   label: 'Notes',     angle:  2.55, rad: 0.82, speed: -0.034, size: 7.0, title: 'Notes',      desc: 'Writings on interaction design, dependencies, and cognitive topology.' }
   ];
 
-  const NODE_LINKS = [[0,1], [1,2], [2,3], [3,4], [4,0], [0,2], [1,3], [2,4]];
+  // Complete K4 graph: 4 perimeter links + 2 cross diagonals
+  const NODE_LINKS = [
+    [0, 1], [1, 2], [2, 3], [3, 0],
+    [0, 2], [1, 3]
+  ];
 
   const PARTICLES = [];
   NODES.forEach((n, i) => {
@@ -81,39 +47,96 @@
     }
   });
 
-  // PAGES DATA
-  const PAGES = {
-    about: {
-      kicker: '01 — Who Am I?',
-      title: 'My story',
-      desc: 'A deeper look into my background, experiences, interests, values, and the way I think about the world.',
-      items: ['Design engineering', 'Product strategy', 'Systems & complexity']
+  // RICH PAGE CONTENT DATA
+  const WORKS = [
+    {
+      title: 'Atlas — Spatial Knowledge Graph',
+      role: 'Design Engineering & Architecture',
+      year: '2025',
+      desc: 'An associative knowledge environment exploring how documents, thoughts, and dependencies link in a high-dimensional topology.',
+      tags: ['TypeScript', 'WebGL / Canvas', 'Graph Theory', 'Information Architecture']
     },
-    notes: {
-      kicker: '02 — Notes',
-      title: 'Ideas and reflections',
-      desc: 'Essays and articles that try to connect what usually stays separate: design and cognition, architecture and strategy, reading and building.',
-      items: ['Memory Is an Interface', 'Second-Order Design', 'Dependencies Are the Real Material']
+    {
+      title: 'Cadence — Adaptive Feedback System',
+      role: 'Systems Design & Prototyping',
+      year: '2024',
+      desc: 'Treating time and attention as a continuous closed-loop control system, adjusting calendar density based on cognitive friction.',
+      tags: ['Interaction Design', 'State Machines', 'Design Engineering']
     },
-    work: {
-      kicker: '03 — Work',
-      title: 'Things I have built',
-      desc: 'A selection of projects, products, experiments and systems described by their architecture and outcomes.',
-      items: ['Atlas — a knowledge graph', 'Cadence — scheduling as feedback', 'Meridian — a design system']
+    {
+      title: 'Meridian — Token-Driven Design Framework',
+      role: 'Design Systems Architecture',
+      year: '2024',
+      desc: 'A compositional design system grounded in harmonic ratios, mathematical spacing constraints, and fluid type scales.',
+      tags: ['Design Systems', 'Tokens', 'CSS Architecture', 'Figma']
     },
-    contact: {
-      kicker: '05 — Say Hello',
-      title: "Let's connect",
-      desc: 'Whether you want to discuss systems thinking, collaborate on a project, or just say hello.',
-      items: ['hello@ibrahimgana.com', 'LinkedIn', 'Twitter', 'GitHub']
+    {
+      title: 'Monolith — Generative Typographic Engine',
+      role: 'Creative Engineering',
+      year: '2023',
+      desc: 'Experiments in algorithmic layout, variable font kinetics, and optical sizing rules on responsive surfaces.',
+      tags: ['Creative Coding', 'Typography', 'SVG / Canvas']
     }
-  };
+  ];
+
+  const ESSAYS = [
+    {
+      title: 'Memory Is an Interface',
+      meta: 'Essay · 6 min read',
+      desc: 'Why humans remember through physical and conceptual spaces, and how software fails when it forces hierarchical folders over semantic trails.'
+    },
+    {
+      title: 'Dependencies Are the Real Material',
+      meta: 'Observation · 4 min read',
+      desc: 'In software and architecture alike, you do not build with pixels or functions — you build with the contracts and coupling between them.'
+    },
+    {
+      title: 'Second-Order Design',
+      meta: 'Reflection · 5 min read',
+      desc: 'Designing not just for how a product looks on day one, but for how users will adapt, bend, and subvert its rules over time.'
+    },
+    {
+      title: 'The Topology of Taste',
+      meta: 'Essay · 7 min read',
+      desc: 'Good taste is not an unexplainable gift — it is a high-resolution mental map built by cataloging thousands of subtle differences.'
+    }
+  ];
 
   // READING PAGE DATA
   let books = [
-    { id: '1', title: 'On Writing Well',         author: 'William Zinsser',  cover: 'https://covers.openlibrary.org/b/isbn/9780060891541-L.jpg', status: 'reading', progress: 65 },
-    { id: '2', title: 'Moonwalking with Einstein', author: 'Joshua Foer',    cover: 'https://covers.openlibrary.org/b/isbn/9780143120537-L.jpg', status: 'read' },
-    { id: '3', title: 'Secrets of Mental Math',   author: 'Arthur Benjamin', cover: 'https://covers.openlibrary.org/b/isbn/9780307338402-L.jpg', status: 'read' }
+    {
+      id: '1',
+      title: 'On Writing Well',
+      author: 'William Zinsser',
+      cover: 'https://covers.openlibrary.org/b/isbn/9780060891541-L.jpg',
+      status: 'reading',
+      progress: 65,
+      takeaway: 'Clutter is the disease of writing. Simplify, prune every word that serves no function, and let the underlying idea breathe.'
+    },
+    {
+      id: '2',
+      title: 'Moonwalking with Einstein',
+      author: 'Joshua Foer',
+      cover: 'https://covers.openlibrary.org/b/isbn/9780143120537-L.jpg',
+      status: 'read',
+      takeaway: 'Memory is an architecture. The more we know, the more hooks we have to hang new knowledge upon.'
+    },
+    {
+      id: '3',
+      title: 'Secrets of Mental Math',
+      author: 'Arthur Benjamin',
+      cover: 'https://covers.openlibrary.org/b/isbn/9780307338402-L.jpg',
+      status: 'read',
+      takeaway: 'Math is pattern recognition and modular representation. When you understand the symmetry of numbers, calculation dissolves.'
+    },
+    {
+      id: '4',
+      title: 'The Timeless Way of Building',
+      author: 'Christopher Alexander',
+      cover: 'https://covers.openlibrary.org/b/isbn/9780195024029-L.jpg',
+      status: 'read',
+      takeaway: 'There is a central quality which is the root criterion of life and spirit in a building or town. It is objective, yet cannot be named.'
+    }
   ];
 
   /* ══════════════════════════════════════════════════
@@ -207,7 +230,9 @@
       appearStart = performance.now();
       setTimeout(() => { loader.remove(); }, 1000);
       const id = location.hash.replace('#', '');
-      if (PAGES[id] || id === 'reading') setTimeout(() => navigate(id), 900);
+      if (id === 'about' || id === 'work' || id === 'notes' || id === 'reading') {
+        setTimeout(() => navigate(id), 900);
+      }
     }, RM ? 0 : 240);
   }
 
@@ -224,8 +249,10 @@
     canvas.style.width  = W + 'px';
     canvas.style.height = H + 'px';
     cx = W / 2; cy = H / 2;
-    R = W < 500 ? Math.min(W * 0.36, H * 0.40) : Math.min(W * 0.42, H * 0.44);
-    pr = portrait.getBoundingClientRect().width / 2 || 50;
+    pr = (portrait.getBoundingClientRect().width / 2) || (W < 500 ? 44 : 54);
+    R = W < 500
+      ? Math.max(pr + 42, Math.min(W * 0.35, H * 0.36))
+      : Math.min(W * 0.42, H * 0.44);
     NODES.forEach(n => { if (n.el) n.lw = n.el.offsetWidth || 70; });
   }
 
@@ -252,7 +279,14 @@
       const a = easeOut(clamp((appear - i * 0.12) / 0.64, 0, 1));
       el.style.opacity = a.toFixed(3);
       const gap = n.size + 14;
-      const side = (n.x + gap + n.lw > W - 12) ? -1 : 1;
+
+      // Position label away from center towards outer edges
+      let side = 1;
+      if (n.x > cx) {
+        side = (n.x + gap + n.lw > W - 12) ? -1 : 1;
+      } else {
+        side = (n.x - gap - n.lw < 12) ? 1 : -1;
+      }
       const lx = n.x + side * gap;
       el.style.transform = 'translate3d(' + lx.toFixed(1) + 'px,' + n.y.toFixed(1) + 'px,0) translate(' + (side > 0 ? '0' : '-100%') + ',-50%)';
       el.classList.toggle('is-hover', activeNode === n);
@@ -294,8 +328,8 @@
       const rad    = R * (n.rad + breathe);
       let x = cx + Math.cos(ang) * rad + parallax.x * (14 + i * 4);
       let y = cy + Math.sin(ang) * rad * 0.94 + parallax.y * (14 + i * 4);
-      n.x = clamp(x, 34, W - 34);
-      n.y = clamp(y, 34, H - 34);
+      n.x = clamp(x, 28, W - 28);
+      n.y = clamp(y, 28, H - 28);
     }
   }
 
@@ -325,7 +359,7 @@
     }
     const nodeAlpha = (n) => { if (!related) return 1; return related.has(n.id) ? 1 : 0.22; };
 
-    // Dashed orbit ring around the portrait centre
+    // Dashed orbit ring around portrait centre
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(RM ? 0 : T * 0.08);
@@ -486,9 +520,8 @@
     if (pageOpen) return;
     if (id === 'home') { goBack(); return; }
 
-    const isReading = id === 'reading';
-    const data = PAGES[id];
-    if (!isReading && !data) return;
+    const validIds = ['about', 'work', 'notes', 'reading'];
+    if (!validIds.includes(id)) return;
 
     pageOpen = true;
     setActive(null);
@@ -499,32 +532,128 @@
     const y    = n ? rect.top  + n.y : window.innerHeight / 2;
     openOrigin = { x, y };
 
-    if (isReading) {
+    if (id === 'reading') {
       page.classList.add('reading-mode');
       pageInner.innerHTML = `
         <button class="page-back" onclick="goBack()">← Back to the network</button>
         <div class="reading-header">
+          <p class="page-kicker">03 — Library</p>
           <h1 class="page-title">The Shelf.</h1>
-          <p class="page-desc">Books I am reading, books I have read, and ideas I come across along the way.</p>
+          <p class="page-desc">Books that shaped how I think about craft, systems, and cognition. Currently reading and selected library additions.</p>
         </div>
         <section id="currentSection" class="current-reading"></section>
         <section>
           <div class="reading-section-header">
-            <h2>Books I have read</h2>
+            <h2>Selected readings</h2>
             <button class="add-btn" id="openAddModal">+ Add a book</button>
           </div>
           <div class="book-grid" id="readGrid"></div>
         </section>
       `;
       renderBooks();
-    } else {
+    } else if (id === 'work') {
       page.classList.remove('reading-mode');
       pageInner.innerHTML = `
         <button class="page-back" onclick="goBack()">← Back to the network</button>
-        <p class="page-kicker">${data.kicker}</p>
-        <h2 class="page-title">${data.title}</h2>
-        <p class="page-desc">${data.desc}</p>
-        <ul class="page-items">${data.items.map(t => '<li>' + t + '</li>').join('')}</ul>
+        <p class="page-kicker">02 — Selected Works</p>
+        <h2 class="page-title">Things I have built</h2>
+        <p class="page-desc">Systems, interaction models, and tools described by their architecture, constraints, and outcomes.</p>
+        <div class="work-list">
+          ${WORKS.map(w => `
+            <article class="work-item">
+              <div class="work-header">
+                <h3 class="work-name">${w.title}</h3>
+                <span class="work-meta">${w.role} · ${w.year}</span>
+              </div>
+              <p class="work-desc">${w.desc}</p>
+              <div class="work-tags">
+                ${w.tags.map(tag => `<span class="work-tag">${tag}</span>`).join('')}
+              </div>
+            </article>
+          `).join('')}
+        </div>
+      `;
+    } else if (id === 'notes') {
+      page.classList.remove('reading-mode');
+      pageInner.innerHTML = `
+        <button class="page-back" onclick="goBack()">← Back to the network</button>
+        <p class="page-kicker">04 — Writings</p>
+        <h2 class="page-title">Notes & Reflections</h2>
+        <p class="page-desc">Connecting ideas across design, cognitive models, system dependencies, and building on the web.</p>
+        <div class="notes-list">
+          ${ESSAYS.map(note => `
+            <article class="note-item">
+              <span class="note-meta">${note.meta}</span>
+              <h3 class="note-title">${note.title}</h3>
+              <p class="note-desc">${note.desc}</p>
+            </article>
+          `).join('')}
+        </div>
+      `;
+    } else if (id === 'about') {
+      page.classList.remove('reading-mode');
+      pageInner.innerHTML = `
+        <button class="page-back" onclick="goBack()">← Back to the network</button>
+        <p class="page-kicker">01 — Who Am I?</p>
+        <h2 class="page-title">Ibrahim Gana</h2>
+        <p class="roles" style="margin-bottom:24px;">Design Engineer &nbsp;·&nbsp; Systems Thinker &nbsp;·&nbsp; Builder</p>
+        
+        <div class="about-bio">
+          <p>I build at the intersection of engineering rigor and design intuition. I think in graphs, feedback loops, and topologies — exploring how individual components compose into coherent, living systems.</p>
+          <p>My work centers on software architecture, interface design, and developing digital environments that clarify complex problems rather than obscure them.</p>
+        </div>
+
+        <section class="about-section">
+          <h3 class="about-section-title">Core Principles</h3>
+          <div class="principles-list">
+            <div class="principle-item">
+              <strong>Everything is connected</strong>
+              <span>Second-order effects matter more than immediate speed. A system is defined by its relationships.</span>
+            </div>
+            <div class="principle-item">
+              <strong>Form follows feedback</strong>
+              <span>Great interfaces are bidirectional dialogues between human intent and system state.</span>
+            </div>
+            <div class="principle-item">
+              <strong>Restraint is clarity</strong>
+              <span>True minimalism is not an absence of ideas — it is the deliberate refusal to decorate confusion.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="about-section">
+          <h3 class="about-section-title">Focus & Craft</h3>
+          <div class="skills-grid">
+            <div class="skill-col">
+              <h4>Engineering</h4>
+              <ul>
+                <li>TypeScript & JavaScript</li>
+                <li>Canvas API & WebGL</li>
+                <li>State Machines</li>
+                <li>Systems Architecture</li>
+              </ul>
+            </div>
+            <div class="skill-col">
+              <h4>Design</h4>
+              <ul>
+                <li>Design Systems</li>
+                <li>Typography & Layout</li>
+                <li>Interaction Models</li>
+                <li>Figma & Prototyping</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="about-section" style="margin-bottom: 32px;">
+          <h3 class="about-section-title">Get in touch</h3>
+          <p style="font-size:0.95rem; line-height:1.6; color:#4A4744; margin:0 0 16px;">
+            Open for collaborations, interesting technical conversations, or systems design consultations.
+          </p>
+          <a href="mailto:hello@ibrahimgana.com" class="contact-link" style="margin-top:0;">
+            hello@ibrahimgana.com ↗
+          </a>
+        </section>
       `;
     }
 
@@ -578,10 +707,6 @@
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && pageOpen) goBack(); });
 
-  document.querySelectorAll('.sr-nav a').forEach(a => {
-    a.addEventListener('click', e => { e.preventDefault(); navigate(a.dataset.nav); });
-  });
-
   /* ══════════════════════════════════════════════════
      READING PAGE LOGIC
      ══════════════════════════════════════════════════ */
@@ -591,6 +716,10 @@
     document.getElementById('modalCover').src = book.cover;
     document.getElementById('modalTitle').textContent  = book.title;
     document.getElementById('modalAuthor').textContent = book.author;
+    const takeawayEl = document.getElementById('modalTakeaway');
+    if (takeawayEl) {
+      takeawayEl.textContent = book.takeaway || 'A book from my reading collection. Eventually, everything connects.';
+    }
     document.getElementById('detailModal').classList.add('active');
   };
 

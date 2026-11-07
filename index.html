@@ -9,22 +9,16 @@
   <meta name="description" content="Ibrahim Gana. Design Engineer, Systems Thinker. Builder.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- Background Audio -->
-  <audio id="bgMusic" loop>
-    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" type="audio/mpeg">
-  </audio>
-
-  <!-- Audio Toggle -->
-  <button class="sound-toggle" id="soundToggle" aria-label="Toggle Background Music">
-    <span class="sound-icon"></span>
-    <span id="soundText">Audio: Off</span>
-  </button>
+  <!-- Skip nav for keyboard users -->
+  <a class="skip-link" href="#stage">Skip to network</a>
 
   <!-- Loader -->
   <div class="loader" id="loader" role="status" aria-live="polite" aria-label="Loading">
@@ -44,32 +38,43 @@
   <!-- Hero -->
   <main class="hero">
 
-    <!-- Left: Intro text -->
+    <!-- Left: Intro -->
     <section class="intro" aria-labelledby="name">
-      <h1 class="name" id="name">Ibrahim Gana</h1>
-      <p class="roles">Design Engineer, Systems Thinker. Builder.</p>
+      <h1 class="name" id="name"><span class="name-part">Ibrahim</span> <span class="name-part">Gana</span></h1>
+      <p class="roles">Design Engineer &nbsp;·&nbsp; Systems Thinker &nbsp;·&nbsp; Builder</p>
       <h2 class="philosophy">Eventually, <em>everything</em> connects.</h2>
+      <a href="mailto:ibrahim@tri-ai.org" class="contact-link" aria-label="Send an email to Ibrahim Gana">
+        hello@ibrahimgana.com <span aria-hidden="true">↗</span>
+      </a>
     </section>
 
-    <!-- Right: Interactive node network with portrait placeholder in the centre -->
+    <!-- Right: Interactive node network -->
     <section class="stage" id="stage" aria-label="Interactive network">
-      <canvas id="network" aria-label="A network of five nodes orbiting a central portrait: Who Am I?, Notes, Work, The Shelf, and Say Hello."></canvas>
+      <canvas id="network"
+        aria-label="A network of four orbiting nodes: Who Am I, Work, The Shelf, and Notes."></canvas>
 
       <!--
-        PORTRAIT PLACEHOLDER
-        Replace portrait.jpg with your actual photo.
-        The nodes and connecting lines orbit around this circle — it stays clear.
+        PORTRAIT — replace portrait.jpg with your photo.
+        Nodes orbit around this circle, leaving the centre clear.
       -->
-      <div class="portrait">
-        <img src="portrait.jpg" alt="Ibrahim Gana">
+      <div class="portrait" aria-hidden="true">
+        <img src="https://asset.cloudinary.com/ibrahimygana/f01c7c5f705e5b3bea3fc19ab3c1ea38" alt="" role="presentation"
+          onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+        <div class="portrait-fallback" style="display:none;">
+          <span>IG</span>
+        </div>
       </div>
 
-      <div class="labels" id="labels"></div>
-      <div class="tooltip" id="tooltip" role="presentation">
+      <div class="labels" id="labels" aria-hidden="true"></div>
+
+      <div class="tooltip" id="tooltip" role="tooltip">
         <h4 id="ttTitle"></h4>
         <p id="ttDesc"></p>
-        <button class="tooltip-cta" id="ttCta" type="button"><span>Explore</span><span aria-hidden="true">→</span></button>
+        <button class="tooltip-cta" id="ttCta" type="button">
+          <span>Explore</span><span aria-hidden="true">→</span>
+        </button>
       </div>
+
       <p class="stage-hint" id="stageHint" aria-hidden="true">Hover to read · Click to enter</p>
     </section>
 
@@ -77,36 +82,39 @@
 
   <!-- Page Overlay (Dynamic Content) -->
   <div class="page" id="page" hidden role="dialog" aria-modal="true" aria-labelledby="pageTitle">
-    <div class="page-inner" id="pageInner">
-      <!-- Content injected by main.js -->
-    </div>
+    <div class="page-inner" id="pageInner"></div>
   </div>
 
   <!-- Book Detail Modal -->
-  <div class="modal-overlay" id="detailModal">
+  <div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-label="Book detail">
     <div class="modal-content">
-      <button class="modal-close" onclick="closeModals()">✕</button>
+      <button class="modal-close" onclick="closeModals()" aria-label="Close">✕</button>
       <div class="detail-layout">
         <div class="detail-cover"><img id="modalCover" src="" alt=""></div>
         <div class="detail-info">
           <h3 id="modalTitle"></h3>
           <div class="author" id="modalAuthor"></div>
-          <p>A selected book from my reading collection. Eventually, everything connects.</p>
+          <div class="takeaway-label">Key takeaway</div>
+          <p id="modalTakeaway">A book from my reading collection. Eventually, everything connects.</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Add Book Modal -->
-  <div class="modal-overlay" id="addModal">
+  <div class="modal-overlay" id="addModal" role="dialog" aria-modal="true" aria-label="Add a book">
     <div class="modal-content">
-      <button class="modal-close" onclick="closeModals()">✕</button>
+      <button class="modal-close" onclick="closeModals()" aria-label="Close">✕</button>
       <h3 style="font-family:var(--serif); font-size:2rem; margin:0 0 24px;">Add a book</h3>
       <form id="addBookForm">
-        <div class="form-group"><label>Book Title</label><input type="text" id="inputTitle" required placeholder="e.g. The Timeless Way of Building"></div>
-        <div class="form-group"><label>Author</label><input type="text" id="inputAuthor" required placeholder="e.g. Christopher Alexander"></div>
-        <div class="form-group"><label>Cover Image URL</label><input type="url" id="inputCover" placeholder="https://..."></div>
-        <div class="form-group"><label>Status</label>
+        <div class="form-group"><label>Book Title</label><input type="text" id="inputTitle" required
+            placeholder="e.g. The Timeless Way of Building"></div>
+        <div class="form-group"><label>Author</label><input type="text" id="inputAuthor" required
+            placeholder="e.g. Christopher Alexander"></div>
+        <div class="form-group"><label>Cover Image URL</label><input type="url" id="inputCover"
+            placeholder="https://..."></div>
+        <div class="form-group">
+          <label>Status</label>
           <select id="inputStatus">
             <option value="read">Read</option>
             <option value="want">Want to Read</option>
@@ -117,18 +125,146 @@
     </div>
   </div>
 
-  <!-- Keyboard / Accessibility Nav -->
-  <nav class="sr-nav" aria-label="Site sections" style="position:fixed; top:-200px; left:0;">
-    <a href="#home"    data-nav="home"    style="display:block; padding:10px; background:#fff;">Home</a>
-    <a href="#about"   data-nav="about"   style="display:block; padding:10px; background:#fff;">Who Am I?</a>
-    <a href="#notes"   data-nav="notes"   style="display:block; padding:10px; background:#fff;">Notes</a>
-    <a href="#work"    data-nav="work"    style="display:block; padding:10px; background:#fff;">Work</a>
-    <a href="#reading" data-nav="reading" style="display:block; padding:10px; background:#fff;">The Shelf</a>
-    <a href="#contact" data-nav="contact" style="display:block; padding:10px; background:#fff;">Say Hello</a>
-  </nav>
+  <!-- Hidden YouTube Player Container (Audio Playback) -->
+  <div id="ytPlayerContainer" class="yt-player-container" aria-hidden="true">
+    <div id="ytPlayer"></div>
+  </div>
 
+  <!-- Floating Music Player (Bottom-Right) -->
+  <aside class="music-widget" id="musicWidget" aria-label="YouTube Music Player">
+
+    <!-- Collapsed State: Small Sound Pill -->
+    <button class="music-toggle" id="musicToggle" aria-label="Open Music Player" aria-expanded="false">
+      <span class="music-bars" aria-hidden="true">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+        <span class="bar bar-3"></span>
+      </span>
+      <span class="music-toggle-label" id="musicToggleLabel">Music</span>
+    </button>
+
+    <!-- Expanded State: Compact Player Card -->
+    <div class="music-card" id="musicCard" role="region" aria-label="Now Playing" aria-hidden="true">
+
+      <!-- Card Header -->
+      <div class="music-card-header">
+        <div class="music-status">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="status-text" id="statusText">Connecting</span>
+        </div>
+        <div class="music-header-actions">
+          <a href="#" target="_blank" rel="noopener noreferrer" class="music-yt-link" id="musicYtLink"
+            aria-label="Open on YouTube" title="Open on YouTube">
+            <span class="yt-text">YouTube</span>
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke="currentColor" stroke-width="1.2"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+          <button class="music-close-btn" id="musicCloseBtn" aria-label="Collapse music player" title="Close">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="currentColor" stroke-width="1.2"
+                stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Track Information (Thumbnail + Details) -->
+      <div class="music-track-info">
+        <div class="music-thumb-wrap">
+          <img id="musicThumb" src="" alt="" class="music-thumb" onerror="this.style.display='none';">
+          <div class="music-thumb-fallback" id="musicThumbFallback">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </div>
+        </div>
+        <div class="music-meta">
+          <div class="music-title-wrap">
+            <span class="music-title" id="musicTitle">Select play to start</span>
+          </div>
+          <span class="music-artist" id="musicArtist">YouTube Audio</span>
+        </div>
+      </div>
+
+      <!-- Seek / Progress Scrub Bar -->
+      <div class="music-progress-wrap">
+        <div class="music-progress-bar" id="musicProgressBar" role="slider" aria-label="Seek track" aria-valuemin="0"
+          aria-valuemax="100" aria-valuenow="0" tabindex="0">
+          <div class="music-progress-fill" id="musicProgressFill"></div>
+          <div class="music-progress-handle" id="musicProgressHandle"></div>
+        </div>
+        <div class="music-time-display">
+          <span id="musicTimeCurrent">0:00</span>
+          <span id="musicTimeTotal">0:00</span>
+        </div>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="music-controls">
+
+        <!-- Playlist Prev Button (shown if playlist) -->
+        <div class="music-playlist-nav" id="musicPlaylistNav" style="display: none;">
+          <button class="ctrl-btn ctrl-prev" id="musicPrevBtn" aria-label="Previous track" title="Previous track">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Play / Pause Button -->
+        <button class="music-play-btn" id="musicPlayBtn" aria-label="Play">
+          <svg class="icon-play" id="iconPlay" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg class="icon-pause" id="iconPause" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"
+            style="display: none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </button>
+
+        <!-- Playlist Next Button (shown if playlist) -->
+        <div class="music-playlist-nav" id="musicPlaylistNavNext" style="display: none;">
+          <button class="ctrl-btn ctrl-next" id="musicNextBtn" aria-label="Next track" title="Next track">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Volume Control -->
+        <div class="music-volume-wrap">
+          <button class="music-vol-btn" id="musicVolBtn" aria-label="Mute or Unmute" title="Mute/Unmute">
+            <svg id="iconVolHigh" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg id="iconVolMuted" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" style="display: none;">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          </button>
+          <input type="range" class="music-vol-slider" id="musicVolSlider" min="0" max="100" value="70"
+            aria-label="Volume">
+        </div>
+
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <!-- Music Player Controller -->
+  <script src="music-player.js"></script>
+  <!-- Main Portfolio Scripts -->
   <script src="main.js"></script>
-
 </body>
 
 </html>
