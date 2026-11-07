@@ -158,7 +158,7 @@
        { label: 'Conference photograph', src: 'images/smw-2018.jpg', alt: '...' }
      ══════════════════════════════════════════════════ */
   const ABOUT_PORTRAIT = {
-    src: 'portrait.jpg',
+    src: 'https://res.cloudinary.com/ibrahimygana/image/upload/v1794010258/oi462t9x0wyopwryvfgc.jpg',
     alt: 'Portrait of Ibrahim Gana'
   };
 
