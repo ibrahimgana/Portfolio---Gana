@@ -1031,6 +1031,8 @@
     }
 
     currentRoute = route;
+    if (siteFooter) siteFooter.hidden = isHome;
+
     document.body.classList.toggle('page-open', !isHome);
     if (homeView) homeView.hidden = !isHome;
     if (page) page.hidden = isHome;
