@@ -44,7 +44,7 @@
       <p class="roles">Design Engineer &nbsp;·&nbsp; Systems Thinker &nbsp;·&nbsp; Builder</p>
       <h2 class="philosophy">Eventually, <em>everything</em> connects.</h2>
       <a href="mailto:ibrahim@tri-ai.org" class="contact-link" aria-label="Send an email to Ibrahim Gana">
-        hello@ibrahimgana.com <span aria-hidden="true">↗</span>
+        ibrahim@tri-ai.org <span aria-hidden="true">↗</span>
       </a>
     </section>
 
@@ -58,8 +58,8 @@
         Nodes orbit around this circle, leaving the centre clear.
       -->
       <div class="portrait" aria-hidden="true">
-        <img src="https://asset.cloudinary.com/ibrahimygana/f01c7c5f705e5b3bea3fc19ab3c1ea38" alt="" role="presentation"
-          onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+        <img src="portrait.png" alt="Ibrahim Gana" role="presentation"
+          onerror="this.src='https://res.cloudinary.com/ibrahimygana/image/upload/nh259hkmymavepwrzp88.png'; this.onerror=function(){ this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex'; };">
         <div class="portrait-fallback" style="display:none;">
           <span>IG</span>
         </div>
@@ -125,144 +125,18 @@
     </div>
   </div>
 
-  <!-- Hidden YouTube Player Container (Audio Playback) -->
-  <div id="ytPlayerContainer" class="yt-player-container" aria-hidden="true">
-    <div id="ytPlayer"></div>
-  </div>
+  <!-- Background Lo-Fi Audio -->
+  <audio id="bgMusic" loop preload="metadata">
+    <source src="lofi.mp3" type="audio/mpeg">
+    <source src="https://raw.githubusercontent.com/riccardobertolini/lofi-music/main/public/audio/empty-mind-118973.mp3" type="audio/mpeg">
+  </audio>
 
-  <!-- Floating Music Player (Bottom-Right) -->
-  <aside class="music-widget" id="musicWidget" aria-label="YouTube Music Player">
+  <!-- Clean Audio Toggle (Bottom-Right) -->
+  <button class="sound-toggle" id="soundToggle" aria-label="Toggle Background Music" type="button">
+    <span class="sound-icon" aria-hidden="true"></span>
+    <span id="soundText">Audio: Off</span>
+  </button>
 
-    <!-- Collapsed State: Small Sound Pill -->
-    <button class="music-toggle" id="musicToggle" aria-label="Open Music Player" aria-expanded="false">
-      <span class="music-bars" aria-hidden="true">
-        <span class="bar bar-1"></span>
-        <span class="bar bar-2"></span>
-        <span class="bar bar-3"></span>
-      </span>
-      <span class="music-toggle-label" id="musicToggleLabel">Music</span>
-    </button>
-
-    <!-- Expanded State: Compact Player Card -->
-    <div class="music-card" id="musicCard" role="region" aria-label="Now Playing" aria-hidden="true">
-
-      <!-- Card Header -->
-      <div class="music-card-header">
-        <div class="music-status">
-          <span class="status-dot" id="statusDot"></span>
-          <span class="status-text" id="statusText">Connecting</span>
-        </div>
-        <div class="music-header-actions">
-          <a href="#" target="_blank" rel="noopener noreferrer" class="music-yt-link" id="musicYtLink"
-            aria-label="Open on YouTube" title="Open on YouTube">
-            <span class="yt-text">YouTube</span>
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-              <path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke="currentColor" stroke-width="1.2"
-                stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </a>
-          <button class="music-close-btn" id="musicCloseBtn" aria-label="Collapse music player" title="Close">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-              <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5" stroke="currentColor" stroke-width="1.2"
-                stroke-linecap="round" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Track Information (Thumbnail + Details) -->
-      <div class="music-track-info">
-        <div class="music-thumb-wrap">
-          <img id="musicThumb" src="" alt="" class="music-thumb" onerror="this.style.display='none';">
-          <div class="music-thumb-fallback" id="musicThumbFallback">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M9 18V5l12-2v13"></path>
-              <circle cx="6" cy="18" r="3"></circle>
-              <circle cx="18" cy="16" r="3"></circle>
-            </svg>
-          </div>
-        </div>
-        <div class="music-meta">
-          <div class="music-title-wrap">
-            <span class="music-title" id="musicTitle">Select play to start</span>
-          </div>
-          <span class="music-artist" id="musicArtist">YouTube Audio</span>
-        </div>
-      </div>
-
-      <!-- Seek / Progress Scrub Bar -->
-      <div class="music-progress-wrap">
-        <div class="music-progress-bar" id="musicProgressBar" role="slider" aria-label="Seek track" aria-valuemin="0"
-          aria-valuemax="100" aria-valuenow="0" tabindex="0">
-          <div class="music-progress-fill" id="musicProgressFill"></div>
-          <div class="music-progress-handle" id="musicProgressHandle"></div>
-        </div>
-        <div class="music-time-display">
-          <span id="musicTimeCurrent">0:00</span>
-          <span id="musicTimeTotal">0:00</span>
-        </div>
-      </div>
-
-      <!-- Controls Row -->
-      <div class="music-controls">
-
-        <!-- Playlist Prev Button (shown if playlist) -->
-        <div class="music-playlist-nav" id="musicPlaylistNav" style="display: none;">
-          <button class="ctrl-btn ctrl-prev" id="musicPrevBtn" aria-label="Previous track" title="Previous track">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Play / Pause Button -->
-        <button class="music-play-btn" id="musicPlayBtn" aria-label="Play">
-          <svg class="icon-play" id="iconPlay" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-          <svg class="icon-pause" id="iconPause" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"
-            style="display: none;">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-          </svg>
-        </button>
-
-        <!-- Playlist Next Button (shown if playlist) -->
-        <div class="music-playlist-nav" id="musicPlaylistNavNext" style="display: none;">
-          <button class="ctrl-btn ctrl-next" id="musicNextBtn" aria-label="Next track" title="Next track">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Volume Control -->
-        <div class="music-volume-wrap">
-          <button class="music-vol-btn" id="musicVolBtn" aria-label="Mute or Unmute" title="Mute/Unmute">
-            <svg id="iconVolHigh" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            </svg>
-            <svg id="iconVolMuted" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8" style="display: none;">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <line x1="23" y1="9" x2="17" y2="15"></line>
-              <line x1="17" y1="9" x2="23" y2="15"></line>
-            </svg>
-          </button>
-          <input type="range" class="music-vol-slider" id="musicVolSlider" min="0" max="100" value="70"
-            aria-label="Volume">
-        </div>
-
-      </div>
-
-    </div>
-  </aside>
-
-  <!-- YouTube IFrame API -->
-  <script src="https://www.youtube.com/iframe_api"></script>
-  <!-- Music Player Controller -->
-  <script src="music-player.js"></script>
   <!-- Main Portfolio Scripts -->
   <script src="main.js"></script>
 </body>

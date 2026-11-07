@@ -650,8 +650,8 @@
           <p style="font-size:0.95rem; line-height:1.6; color:#4A4744; margin:0 0 16px;">
             Open for collaborations, interesting technical conversations, or systems design consultations.
           </p>
-          <a href="mailto:hello@ibrahimgana.com" class="contact-link" style="margin-top:0;">
-            hello@ibrahimgana.com ↗
+          <a href="mailto:ibrahim@tri-ai.org" class="contact-link" style="margin-top:0;">
+            ibrahim@tri-ai.org ↗
           </a>
         </section>
       `;
@@ -789,6 +789,50 @@
         </div>
       `).join('');
     }
+  }
+
+  /* ══════════════════════════════════════════════════
+     LO-FI AUDIO CONTROLS
+     ══════════════════════════════════════════════════ */
+  const bgMusic = document.getElementById('bgMusic');
+  const soundToggle = document.getElementById('soundToggle');
+  const soundText = document.getElementById('soundText');
+  let isAudioPlaying = false;
+
+  if (bgMusic && soundToggle && soundText) {
+    bgMusic.volume = 0.35;
+
+    function playAudio() {
+      bgMusic.play().then(() => {
+        isAudioPlaying = true;
+        soundToggle.classList.add('is-playing');
+        soundText.textContent = 'Audio: On';
+      }).catch(err => {
+        console.log('Audio playback waiting for user action:', err);
+      });
+    }
+
+    function pauseAudio() {
+      bgMusic.pause();
+      isAudioPlaying = false;
+      soundToggle.classList.remove('is-playing');
+      soundText.textContent = 'Audio: Off';
+    }
+
+    soundToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isAudioPlaying) {
+        pauseAudio();
+      } else {
+        playAudio();
+      }
+    });
+
+    bgMusic.addEventListener('pause', () => {
+      if (!bgMusic.seeking && isAudioPlaying) {
+        pauseAudio();
+      }
+    });
   }
 
   /* ══════════════════════════════════════════════════
