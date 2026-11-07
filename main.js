@@ -753,7 +753,7 @@
         <h2 class="about-closing-quote" id="aboutClosingTitle">Eventually, <em>everything</em> connects.</h2>
         <p class="about-closing-text">What started as a decision to attend a conference became a journey through technology, teaching, entrepreneurship and research. I am still exploring. Still learning. Still building.</p>
         <nav class="about-closing-links" aria-label="Continue exploring">
-          <button type="button" onclick="goBack()">Nodes <span class="closing-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" onclick="goBack()">Notes <span class="closing-arrow" aria-hidden="true">↗</span></button>
           <button type="button" onclick="goToPage('work')">Work <span class="closing-arrow" aria-hidden="true">↗</span></button>
           <button type="button" onclick="goToPage('reading')">The Shelf <span class="closing-arrow" aria-hidden="true">↗</span></button>
           <a href="mailto:ibrahim@tri-ai.org">Say Hello <span class="closing-arrow" aria-hidden="true">↗</span></a>
