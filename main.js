@@ -11,6 +11,7 @@
      ══════════════════════════════════════════════════ */
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isTouch = matchMedia('(hover: none)').matches;
   document.documentElement.classList.add(isTouch ? 'is-touch' : 'is-desktop');
@@ -20,10 +21,10 @@
 
   // 4 Orbiting Nodes (Who Am I, Work, The Shelf, Notes)
   const NODES = [
-    { id: 'about',   label: 'Who Am I?', angle: -1.90, rad: 0.80, speed:  0.038, size: 7.5, title: 'Who Am I?',  desc: 'My story, systems thinking philosophy, background and engineering values.' },
-    { id: 'work',    label: 'Work',      angle: -0.45, rad: 0.86, speed: -0.032, size: 8.0, title: 'Work',       desc: 'Selected projects, products, architectures and experiments I have built.' },
-    { id: 'reading', label: 'The Shelf', angle:  1.05, rad: 0.78, speed:  0.035, size: 7.0, title: 'The Shelf',  desc: 'Books I am reading, library archive, and distilled margin notes.' },
-    { id: 'notes',   label: 'Notes',     angle:  2.55, rad: 0.82, speed: -0.034, size: 7.0, title: 'Notes',      desc: 'Writings on interaction design, dependencies, and cognitive topology.' }
+    { id: 'about', label: 'Who Am I?', angle: -1.90, rad: 0.80, speed: 0.038, size: 7.5, title: 'Who Am I?', desc: 'My story, systems thinking philosophy, background and engineering values.' },
+    { id: 'work', label: 'Work', angle: -0.45, rad: 0.86, speed: -0.032, size: 8.0, title: 'Work', desc: 'Selected projects, products, architectures and experiments I have built.' },
+    { id: 'reading', label: 'The Shelf', angle: 1.05, rad: 0.78, speed: 0.035, size: 7.0, title: 'The Shelf', desc: 'Books I am reading, library archive, and distilled margin notes.' },
+    { id: 'notes', label: 'Notes', angle: 2.55, rad: 0.82, speed: -0.034, size: 7.0, title: 'Notes', desc: 'Writings on interaction design, dependencies, and cognitive topology.' }
   ];
 
   // Complete K4 graph: 4 perimeter links + 2 cross diagonals
@@ -102,6 +103,87 @@
     }
   ];
 
+  /* ══════════════════════════════════════════════════
+     WHO AM I? — EDITORIAL JOURNEY
+     To use your own photographs, add `src` (and optionally
+     `alt`) to any artefact below. An empty `src` renders a
+     clearly labelled placeholder.
+       { label: 'Conference photograph', src: 'images/smw-2018.jpg', alt: '...' }
+     ══════════════════════════════════════════════════ */
+  const ABOUT_PORTRAIT = {
+    src: 'portrait.jpg',
+    alt: 'Portrait of Ibrahim Gana'
+  };
+
+  const ABOUT_CHAPTERS = [
+    {
+      num: '01',
+      title: 'The Wake-up Call',
+      tag: '2018 · Social Media Week Lagos',
+      intro: 'I took leave from my facilities management job to attend Social Media Week Lagos. The experience exposed me to young people doing interesting things with technology, business and creativity. I returned with a different perspective and resigned from my job.',
+      artefacts: [
+        { label: 'Conference photograph', src: '' },
+        { label: 'Event badge or ticket', src: '' },
+        { label: 'Memorabilia', src: '' }
+      ]
+    },
+    {
+      num: '02',
+      title: 'A New Beginning',
+      tag: 'Code Lagos',
+      intro: 'At Social Media Week, I came across Code Lagos and applied. After resigning, I spent some time figuring out my next move. Then an email arrived inviting me to begin the programme. I returned to Lagos and started learning to code.',
+      artefacts: [
+        { label: 'Code Lagos photograph', src: '' },
+        { label: 'Computer and code snippet', src: '' },
+        { label: 'Early learning material', src: '' }
+      ]
+    },
+    {
+      num: '03',
+      title: 'Learning and Sharing',
+      tag: 'From learning to teaching',
+      intro: 'I started teaching others to code, including blind learners. This was an important part of my journey from being a student to helping other people access technology.',
+      artefacts: [
+        { label: 'Teaching photograph', src: '' },
+        { label: 'Workshop or learning session', src: '' },
+        { label: 'Community moment', src: '' }
+      ]
+    },
+    {
+      num: '04',
+      title: 'Building a Startup',
+      tag: 'Stylebitt',
+      intro: 'I moved from learning about technology to building with it. Through Stylebitt, I worked on using technology to solve practical problems in the fashion industry.',
+      artefacts: [
+        { label: 'Stylebitt interface', src: '' },
+        { label: 'Team photograph', src: '' },
+        { label: 'Fashion production artefact', src: '' }
+      ]
+    },
+    {
+      num: '05',
+      title: 'Exploring Artificial Intelligence',
+      tag: 'AI Saturdays Lagos → TRI AI',
+      intro: 'My journey into technology continued into artificial intelligence. I joined AI Saturdays Lagos, which has since become TRI AI, and became involved in building a learning and research community around AI.',
+      artefacts: [
+        { label: 'TRI AI community photograph', src: '' },
+        { label: 'Event or cohort', src: '' },
+        { label: 'Project or learning material', src: '' }
+      ]
+    },
+    {
+      num: '06',
+      title: 'Still Becoming',
+      tag: 'Present day',
+      intro: 'I continue to explore the intersections of design, technology, systems thinking, research and building.',
+      artefacts: [
+        { label: 'Current portrait', src: '' },
+        { label: 'Workspace, books or sketches', src: '' },
+        { label: 'Current project', src: '' }
+      ]
+    }
+  ];
+
   // READING PAGE DATA
   let books = [
     {
@@ -129,32 +211,25 @@
       status: 'read',
       takeaway: 'Math is pattern recognition and modular representation. When you understand the symmetry of numbers, calculation dissolves.'
     },
-    {
-      id: '4',
-      title: 'The Timeless Way of Building',
-      author: 'Christopher Alexander',
-      cover: 'https://covers.openlibrary.org/b/isbn/9780195024029-L.jpg',
-      status: 'read',
-      takeaway: 'There is a central quality which is the root criterion of life and spirit in a building or town. It is objective, yet cannot be named.'
-    }
+
   ];
 
   /* ══════════════════════════════════════════════════
      DOM ELEMENTS
      ══════════════════════════════════════════════════ */
-  const stage     = document.getElementById('stage');
-  const canvas    = document.getElementById('network');
-  const ctx       = canvas.getContext('2d');
-  const labelsEl  = document.getElementById('labels');
-  const portrait  = document.querySelector('.portrait');
-  const tooltip   = document.getElementById('tooltip');
-  const ttTitle   = document.getElementById('ttTitle');
-  const ttDesc    = document.getElementById('ttDesc');
-  const ttCta     = document.getElementById('ttCta');
-  const loader    = document.getElementById('loader');
-  const countEl   = document.getElementById('count');
-  const ruleEl    = document.getElementById('rule');
-  const page      = document.getElementById('page');
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('network');
+  const ctx = canvas.getContext('2d');
+  const labelsEl = document.getElementById('labels');
+  const portrait = document.querySelector('.portrait');
+  const tooltip = document.getElementById('tooltip');
+  const ttTitle = document.getElementById('ttTitle');
+  const ttDesc = document.getElementById('ttDesc');
+  const ttCta = document.getElementById('ttCta');
+  const loader = document.getElementById('loader');
+  const countEl = document.getElementById('count');
+  const ruleEl = document.getElementById('rule');
+  const page = document.getElementById('page');
   const pageInner = document.getElementById('pageInner');
 
   let W = 0, H = 0, DPR = 1, cx = 0, cy = 0, pr = 0, R = 0, T = 0;
@@ -168,7 +243,7 @@
      LOADER LOGIC
      ══════════════════════════════════════════════════ */
   const markLinks = document.getElementById('loaderLinks');
-  const markDots  = document.getElementById('loaderDots');
+  const markDots = document.getElementById('loaderDots');
   const LINES = [], DOTS = [];
 
   (function buildMark() {
@@ -178,7 +253,7 @@
       const y = 60 + Math.sin(a) * 40;
       const line = document.createElementNS(NS, 'line');
       line.setAttribute('x1', 60); line.setAttribute('y1', 60);
-      line.setAttribute('x2', x);  line.setAttribute('y2', y);
+      line.setAttribute('x2', x); line.setAttribute('y2', y);
       line.setAttribute('stroke-dasharray', 40);
       line.setAttribute('stroke-dashoffset', 40);
       markLinks.appendChild(line); LINES.push(line);
@@ -209,7 +284,7 @@
   }
 
   function startLoader() {
-    const duration = RM ? 160 : 8500;
+    const duration = RM ? 160 : 1200;
     const t0 = performance.now();
     function step(now) {
       const t = Math.min((now - t0) / duration, 1);
@@ -242,11 +317,11 @@
   function resize() {
     const rect = stage.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    DPR = Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2);
     W = rect.width; H = rect.height;
-    canvas.width  = Math.round(W * DPR);
+    canvas.width = Math.round(W * DPR);
     canvas.height = Math.round(H * DPR);
-    canvas.style.width  = W + 'px';
+    canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
     cx = W / 2; cy = H / 2;
     pr = (portrait.getBoundingClientRect().width / 2) || (W < 500 ? 44 : 54);
@@ -264,7 +339,7 @@
       b.addEventListener('pointerenter', () => { if (!isTouch) setActive(n); });
       b.addEventListener('pointerleave', () => { if (!isTouch && activeNode === n) setActive(null); });
       b.addEventListener('focus', () => { lastFocusedNode = n; setActive(n); });
-      b.addEventListener('blur',  () => { if (!isTouch && activeNode === n) setActive(null); });
+      b.addEventListener('blur', () => { if (!isTouch && activeNode === n) setActive(null); });
       b.addEventListener('click', e => {
         e.preventDefault(); e.stopPropagation();
         if (isTouch) onNodeTap(n); else navigate(n.id);
@@ -299,7 +374,7 @@
     canvas.style.cursor = n && !isTouch ? 'pointer' : 'default';
     if (n) {
       ttTitle.textContent = n.title;
-      ttDesc.textContent  = n.desc;
+      ttDesc.textContent = n.desc;
       ttCta.querySelector('span').textContent = 'Explore ' + n.label;
       tooltip.classList.add('on');
       tooltipW = tooltip.offsetWidth;
@@ -323,9 +398,9 @@
   function updateNodes() {
     for (let i = 0; i < NODES.length; i++) {
       const n = NODES[i];
-      const ang    = n.angle + T * n.speed + Math.sin(T * 0.47 + i * 1.7) * 0.10 + rotOffset;
+      const ang = n.angle + T * n.speed + Math.sin(T * 0.47 + i * 1.7) * 0.10 + rotOffset;
       const breathe = Math.sin(T * 0.8 + i * 2.1) * 0.035;
-      const rad    = R * (n.rad + breathe);
+      const rad = R * (n.rad + breathe);
       let x = cx + Math.cos(ang) * rad + parallax.x * (14 + i * 4);
       let y = cy + Math.sin(ang) * rad * 0.94 + parallax.y * (14 + i * 4);
       n.x = clamp(x, 28, W - 28);
@@ -386,29 +461,29 @@
     // Node-to-node links
     for (const [a, b] of NODE_LINKS) {
       const A = NODES[a], B = NODES[b];
-      const hot  = hv && (hv === A || hv === B);
+      const hot = hv && (hv === A || hv === B);
       const fade = Math.min(nodeAlpha(A), nodeAlpha(B));
       ctx.beginPath();
       ctx.moveTo(A.x, A.y);
       ctx.lineTo(B.x, B.y);
       ctx.strokeStyle = hot ? 'rgba(114,47,55,0.45)' : 'rgba(28,27,26,' + (0.085 * fade * appear) + ')';
-      ctx.lineWidth   = hot ? 1.2 : 1;
+      ctx.lineWidth = hot ? 1.2 : 1;
       ctx.stroke();
     }
 
     // Lines from portrait edge to each node
     for (const n of NODES) {
       const dx = n.x - cx, dy = n.y - cy;
-      const d  = Math.hypot(dx, dy) || 1;
+      const d = Math.hypot(dx, dy) || 1;
       const x1 = cx + (dx / d) * (pr + 9);
       const y1 = cy + (dy / d) * (pr + 9);
-      const hot  = hv === n;
+      const hot = hv === n;
       const fade = nodeAlpha(n);
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(n.x, n.y);
       ctx.strokeStyle = hot ? 'rgba(114,47,55,0.78)' : 'rgba(28,27,26,' + (0.115 * fade * appear) + ')';
-      ctx.lineWidth   = hot ? 1.4 : 1;
+      ctx.lineWidth = hot ? 1.4 : 1;
       ctx.stroke();
     }
 
@@ -423,16 +498,16 @@
 
     // Node dots
     for (let i = 0; i < NODES.length; i++) {
-      const n  = NODES[i];
+      const n = NODES[i];
       const na = easeOut(clamp((appear - i * 0.12) / 0.64, 0, 1));
       if (na <= 0.001) continue;
-      const hot  = hv === n;
+      const hot = hv === n;
       const fade = nodeAlpha(n);
-      const r    = n.size * na * (hot ? 1.55 : 1);
+      const r = n.size * na * (hot ? 1.55 : 1);
       if (hot) {
         ctx.beginPath(); ctx.arc(n.x, n.y, r + 12, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(114,47,55,0.085)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(n.x, n.y, r + 7,  0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(n.x, n.y, r + 7, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(114,47,55,0.35)'; ctx.lineWidth = 1; ctx.stroke();
       }
       ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
@@ -445,17 +520,20 @@
   function loop(now) {
     if (!lastTs) lastTs = now;
     const dt = Math.min((now - lastTs) / 1000, 0.05); lastTs = now;
-    if (!RM) T += dt;
+    if (!RM) T += dt * (isTouch ? (activeNode ? 0 : 0.55) : 1);
     appear = (loaded && appearStart) ? clamp((now - appearStart) / 1200, 0, 1) : 0;
 
-    const tpx = (pointer.active && !RM) ? pointer.nx : 0;
-    const tpy = (pointer.active && !RM) ? pointer.ny : 0;
+    const canParallax = pointer.active && !RM && !isTouch;
+    const tpx = canParallax ? pointer.nx : 0;
+    const tpy = canParallax ? pointer.ny : 0;
     parallax.x += (tpx - parallax.x) * 0.06;
     parallax.y += (tpy - parallax.y) * 0.06;
-    rotTarget   = (pointer.active && !RM) ? pointer.nx * 0.12 : 0;
-    rotOffset  += (rotTarget - rotOffset) * 0.04;
+    rotTarget = canParallax ? pointer.nx * 0.12 : 0;
+    rotOffset += (rotTarget - rotOffset) * 0.04;
 
-    updateNodes(); updateParticles(); draw(); updateLabels(); updateTooltip();
+    if (!pageOpen && !document.hidden) {
+      updateNodes(); updateParticles(); draw(); updateLabels(); updateTooltip();
+    }
     requestAnimationFrame(loop);
   }
 
@@ -489,20 +567,22 @@
   canvas.addEventListener('click', e => {
     if (isTouch) return;
     const rect = canvas.getBoundingClientRect();
-    const hit  = hitTest(e.clientX - rect.left, e.clientY - rect.top);
+    const hit = hitTest(e.clientX - rect.left, e.clientY - rect.top);
     if (hit) navigate(hit.id);
   });
 
   let tapStart = null;
   canvas.addEventListener('pointerdown', e => { if (isTouch) tapStart = { x: e.clientX, y: e.clientY }; }, { passive: true });
-  canvas.addEventListener('pointerup',   e => {
+  canvas.addEventListener('pointerup', e => {
     if (!isTouch || !tapStart) return;
     const dx = e.clientX - tapStart.x, dy = e.clientY - tapStart.y;
     tapStart = null;
+    pointer.active = false;
     if (Math.hypot(dx, dy) > 12) return;
     const rect = canvas.getBoundingClientRect();
     onNodeTap(hitTest(e.clientX - rect.left, e.clientY - rect.top));
   }, { passive: true });
+  canvas.addEventListener('pointercancel', () => { tapStart = null; pointer.active = false; }, { passive: true });
 
   function onNodeTap(node) {
     if (!node) { setActive(null); return; }
@@ -514,26 +594,199 @@
   ttCta.addEventListener('click', e => { e.stopPropagation(); if (activeNode) navigate(activeNode.id); });
 
   /* ══════════════════════════════════════════════════
+     WHO AM I? — RENDERING & INTERACTIONS
+     ══════════════════════════════════════════════════ */
+  let aboutRail = null;
+  let aboutRevealObserver = null;
+
+  function aboutMedia(art) {
+    const hasSrc = !!art.src;
+    const inner = hasSrc
+      ? `<img src="${escapeHtml(art.src)}" alt="${escapeHtml(art.alt || art.label)}" loading="lazy" decoding="async">`
+      : `<div class="media-placeholder"><span class="media-plus" aria-hidden="true">+</span><span class="media-note">Image placeholder</span></div>`;
+    return `
+      <figure class="about-media${hasSrc ? '' : ' is-placeholder'}" data-reveal>
+        <div class="about-media-frame">${inner}</div>
+        <figcaption><span>${escapeHtml(art.label)}</span>${hasSrc ? '' : '<span class="media-replace">Replace</span>'}</figcaption>
+      </figure>`;
+  }
+
+  function aboutChapterHTML(ch) {
+    const detailsId = 'aboutDetails' + ch.num;
+    const primary = ch.artefacts[0];
+    const rest = ch.artefacts.slice(1);
+    return `
+      <li class="about-chapter">
+        <span class="about-chapter-dot" aria-hidden="true"></span>
+        <button class="about-chapter-head" id="aboutChapter${ch.num}" type="button" aria-expanded="false" aria-controls="${detailsId}">
+          <span class="about-chapter-num">${ch.num}</span>
+          <span class="about-chapter-heading">
+            <span class="about-chapter-title">${escapeHtml(ch.title)}</span>
+            <span class="about-chapter-tag">${escapeHtml(ch.tag)}</span>
+          </span>
+          <span class="about-chapter-toggle" aria-hidden="true">
+            <span class="about-chapter-toggle-label">Explore</span>
+            <span class="about-chapter-plus"></span>
+          </span>
+        </button>
+        <div class="about-chapter-body">
+          <div class="about-chapter-text">
+            <p class="about-chapter-intro">${escapeHtml(ch.intro)}</p>
+            <div class="about-chapter-details" id="${detailsId}" role="region" aria-labelledby="aboutChapter${ch.num}" inert>
+              <div class="about-chapter-details-inner">
+                <div class="about-media-grid">${rest.map(aboutMedia).join('')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="about-chapter-media">${aboutMedia(primary)}</div>
+        </div>
+      </li>`;
+  }
+
+  function aboutPortraitHTML() {
+    const hasSrc = !!ABOUT_PORTRAIT.src;
+    const inner = hasSrc
+      ? `<img src="${escapeHtml(ABOUT_PORTRAIT.src)}" alt="${escapeHtml(ABOUT_PORTRAIT.alt)}" decoding="async">`
+      : `<div class="media-placeholder"><span class="media-plus" aria-hidden="true">+</span><span class="media-note">Portrait placeholder</span></div>`;
+    return `
+      <figure class="about-portrait-figure" data-reveal>
+        <div class="about-media-frame about-portrait-frame${hasSrc ? '' : ' is-placeholder'}">${inner}</div>
+        <figcaption><span>Ibrahim Gana</span>${hasSrc ? '' : '<span class="media-replace">Replace</span>'}</figcaption>
+      </figure>`;
+  }
+
+  function renderAboutPage() {
+    return `
+      <button class="page-back" onclick="goBack()">← Back to the network</button>
+
+      <header class="about-intro">
+        <div class="about-intro-text">
+          <p class="page-kicker">01 — Who Am I?</p>
+          <h1 class="about-title">Who Am I?</h1>
+          <p class="about-lede">I have taken a few unexpected turns. From facilities management to technology, startups and AI. This is how I got here.</p>
+        </div>
+        ${aboutPortraitHTML()}
+      </header>
+
+      <div class="about-connector" aria-hidden="true">
+        <svg viewBox="0 0 160 140" preserveAspectRatio="xMidYMid meet">
+          <path class="connector-line" d="M80 0 V56 C80 92 44 92 44 140" />
+          <path class="connector-line is-accent" d="M80 0 V56 C80 92 116 92 116 140" />
+          <circle cx="80" cy="4" r="3.5" />
+        </svg>
+      </div>
+
+      <section class="about-journey" aria-labelledby="aboutJourneyTitle">
+        <div class="about-journey-head" data-reveal>
+          <p class="page-kicker">02 — The Journey</p>
+          <h2 class="about-section-title" id="aboutJourneyTitle">A life in <em>connections.</em></h2>
+        </div>
+        <div class="about-journey-track" id="aboutJourneyTrack">
+          <div class="about-rail" aria-hidden="true"><div class="about-rail-fill" id="aboutRailFill"></div></div>
+          <ol class="about-chapters">
+            ${ABOUT_CHAPTERS.map(aboutChapterHTML).join('')}
+          </ol>
+        </div>
+      </section>
+
+      <section class="about-closing" aria-labelledby="aboutClosingTitle">
+        <h2 class="about-closing-quote" id="aboutClosingTitle">Eventually, <em>everything</em> connects.</h2>
+        <p class="about-closing-text">What started as a decision to attend a conference became a journey through technology, teaching, entrepreneurship and research. I am still exploring. Still learning. Still building.</p>
+        <nav class="about-closing-links" aria-label="Continue exploring">
+          <button type="button" onclick="goBack()">Nodes <span class="closing-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" onclick="goToPage('work')">Work <span class="closing-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" onclick="goToPage('reading')">The Shelf <span class="closing-arrow" aria-hidden="true">↗</span></button>
+          <a href="mailto:ibrahim@tri-ai.org">Say Hello <span class="closing-arrow" aria-hidden="true">↗</span></a>
+        </nav>
+      </section>
+    `;
+  }
+
+  function updateAboutRail() {
+    if (!aboutRail) return;
+    const rect = aboutRail.track.getBoundingClientRect();
+    const focus = window.innerHeight * 0.55;
+    const p = clamp((focus - rect.top) / Math.max(rect.height, 1), 0, 1);
+    aboutRail.fill.style.transform = 'scaleY(' + p.toFixed(4) + ')';
+  }
+
+  function initAboutPage() {
+    const track = document.getElementById('aboutJourneyTrack');
+    const fill = document.getElementById('aboutRailFill');
+    aboutRail = (track && fill) ? { track, fill } : null;
+    updateAboutRail();
+
+    page.querySelectorAll('.about-chapter-head').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const chapter = btn.closest('.about-chapter');
+        const details = chapter.querySelector('.about-chapter-details');
+        const open = !chapter.classList.contains('is-open');
+        chapter.classList.toggle('is-open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (details) details.inert = !open;
+        const label = btn.querySelector('.about-chapter-toggle-label');
+        if (label) label.textContent = open ? 'Close' : 'Explore';
+      });
+    });
+
+    if (aboutRevealObserver) aboutRevealObserver.disconnect();
+    const reveals = page.querySelectorAll('[data-reveal]');
+    if (!RM && 'IntersectionObserver' in window) {
+      aboutRevealObserver = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            aboutRevealObserver.unobserve(entry.target);
+          }
+        }
+      }, { root: page, threshold: 0.12 });
+      reveals.forEach(el => aboutRevealObserver.observe(el));
+    } else {
+      reveals.forEach(el => el.classList.add('is-revealed'));
+    }
+  }
+
+  let aboutRailRaf = 0;
+  page.addEventListener('scroll', () => {
+    if (!aboutRail || aboutRailRaf) return;
+    aboutRailRaf = requestAnimationFrame(() => { aboutRailRaf = 0; updateAboutRail(); });
+  }, { passive: true });
+  window.addEventListener('resize', () => { if (aboutRail) updateAboutRail(); });
+
+  /* ══════════════════════════════════════════════════
      PAGE NAVIGATION & RENDERING
      ══════════════════════════════════════════════════ */
   function navigate(id) {
-    if (pageOpen) return;
     if (id === 'home') { goBack(); return; }
 
     const validIds = ['about', 'work', 'notes', 'reading'];
     if (!validIds.includes(id)) return;
 
+    let switching = false;
+    if (pageOpen) {
+      if (page.dataset.current === id) return;
+      switching = true;
+      pageOpen = false;
+      page.classList.remove('is-open');
+      document.body.classList.remove('page-open');
+      page.hidden = true;
+    }
+
     pageOpen = true;
+    page.dataset.current = id;
+    page.scrollTop = 0;
+    page.classList.toggle('reading-mode', id === 'reading');
+    page.classList.toggle('about-mode', id === 'about');
+    if (id !== 'about') aboutRail = null;
     setActive(null);
 
-    const n    = NODES.find(x => x.id === id);
+    const n = NODES.find(x => x.id === id);
     const rect = canvas.getBoundingClientRect();
-    const x    = n ? rect.left + n.x : window.innerWidth  / 2;
-    const y    = n ? rect.top  + n.y : window.innerHeight / 2;
+    const x = n ? rect.left + n.x : window.innerWidth / 2;
+    const y = n ? rect.top + n.y : window.innerHeight / 2;
     openOrigin = { x, y };
 
     if (id === 'reading') {
-      page.classList.add('reading-mode');
       pageInner.innerHTML = `
         <button class="page-back" onclick="goBack()">← Back to the network</button>
         <div class="reading-header">
@@ -552,7 +805,6 @@
       `;
       renderBooks();
     } else if (id === 'work') {
-      page.classList.remove('reading-mode');
       pageInner.innerHTML = `
         <button class="page-back" onclick="goBack()">← Back to the network</button>
         <p class="page-kicker">02 — Selected Works</p>
@@ -574,7 +826,6 @@
         </div>
       `;
     } else if (id === 'notes') {
-      page.classList.remove('reading-mode');
       pageInner.innerHTML = `
         <button class="page-back" onclick="goBack()">← Back to the network</button>
         <p class="page-kicker">04 — Writings</p>
@@ -591,77 +842,16 @@
         </div>
       `;
     } else if (id === 'about') {
-      page.classList.remove('reading-mode');
-      pageInner.innerHTML = `
-        <button class="page-back" onclick="goBack()">← Back to the network</button>
-        <p class="page-kicker">01 — Who Am I?</p>
-        <h2 class="page-title">Ibrahim Gana</h2>
-        <p class="roles" style="margin-bottom:24px;">Design Engineer &nbsp;·&nbsp; Systems Thinker &nbsp;·&nbsp; Builder</p>
-        
-        <div class="about-bio">
-          <p>I build at the intersection of engineering rigor and design intuition. I think in graphs, feedback loops, and topologies — exploring how individual components compose into coherent, living systems.</p>
-          <p>My work centers on software architecture, interface design, and developing digital environments that clarify complex problems rather than obscure them.</p>
-        </div>
-
-        <section class="about-section">
-          <h3 class="about-section-title">Core Principles</h3>
-          <div class="principles-list">
-            <div class="principle-item">
-              <strong>Everything is connected</strong>
-              <span>Second-order effects matter more than immediate speed. A system is defined by its relationships.</span>
-            </div>
-            <div class="principle-item">
-              <strong>Form follows feedback</strong>
-              <span>Great interfaces are bidirectional dialogues between human intent and system state.</span>
-            </div>
-            <div class="principle-item">
-              <strong>Restraint is clarity</strong>
-              <span>True minimalism is not an absence of ideas — it is the deliberate refusal to decorate confusion.</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="about-section">
-          <h3 class="about-section-title">Focus & Craft</h3>
-          <div class="skills-grid">
-            <div class="skill-col">
-              <h4>Engineering</h4>
-              <ul>
-                <li>TypeScript & JavaScript</li>
-                <li>Canvas API & WebGL</li>
-                <li>State Machines</li>
-                <li>Systems Architecture</li>
-              </ul>
-            </div>
-            <div class="skill-col">
-              <h4>Design</h4>
-              <ul>
-                <li>Design Systems</li>
-                <li>Typography & Layout</li>
-                <li>Interaction Models</li>
-                <li>Figma & Prototyping</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section class="about-section" style="margin-bottom: 32px;">
-          <h3 class="about-section-title">Get in touch</h3>
-          <p style="font-size:0.95rem; line-height:1.6; color:#4A4744; margin:0 0 16px;">
-            Open for collaborations, interesting technical conversations, or systems design consultations.
-          </p>
-          <a href="mailto:ibrahim@tri-ai.org" class="contact-link" style="margin-top:0;">
-            ibrahim@tri-ai.org ↗
-          </a>
-        </section>
-      `;
+      pageInner.innerHTML = renderAboutPage();
     }
 
-    history.replaceState(null, '', '#' + id);
+    if (switching) history.replaceState({ page: id }, '', '#' + id);
+    else history.pushState({ page: id }, '', '#' + id);
     document.body.classList.add('page-open');
 
     page.hidden = false;
     page.classList.remove('is-open');
+    if (id === 'about') initAboutPage();
 
     page.style.transition = 'none';
     page.style.clipPath = 'circle(0px at ' + x + 'px ' + y + 'px)';
@@ -677,6 +867,7 @@
         page.classList.add('is-open');
         page.style.clipPath = 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)';
         page.style.webkitClipPath = 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)';
+        if (id === 'about') updateAboutRail();
       });
     });
 
@@ -688,9 +879,12 @@
     }, RM ? 0 : 460);
   }
 
+  window.goToPage = function (id) { navigate(id); };
+
   window.goBack = function () {
     if (!pageOpen) return;
     pageOpen = false;
+    page.dataset.current = '';
 
     page.classList.remove('is-open');
     document.body.classList.remove('page-open');
@@ -706,6 +900,7 @@
   };
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && pageOpen) goBack(); });
+  window.addEventListener('popstate', () => { if (pageOpen) goBack(); });
 
   /* ══════════════════════════════════════════════════
      READING PAGE LOGIC
@@ -714,7 +909,7 @@
     const book = books.find(b => b.id === id);
     if (!book) return;
     document.getElementById('modalCover').src = book.cover;
-    document.getElementById('modalTitle').textContent  = book.title;
+    document.getElementById('modalTitle').textContent = book.title;
     document.getElementById('modalAuthor').textContent = book.author;
     const takeawayEl = document.getElementById('modalTakeaway');
     if (takeawayEl) {
@@ -739,9 +934,9 @@
 
   document.getElementById('addBookForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    const title  = document.getElementById('inputTitle').value;
+    const title = document.getElementById('inputTitle').value;
     const author = document.getElementById('inputAuthor').value;
-    const cover  = document.getElementById('inputCover').value || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop';
+    const cover = document.getElementById('inputCover').value || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop';
     const status = document.getElementById('inputStatus').value;
     books.push({ id: Date.now().toString(), title, author, cover, status });
     renderBooks();
@@ -750,20 +945,20 @@
   });
 
   function renderBooks() {
-    const currentBook    = books.find(b => b.status === 'reading');
+    const currentBook = books.find(b => b.status === 'reading');
     const currentSection = document.getElementById('currentSection');
 
     if (currentSection) {
       if (currentBook) {
         currentSection.style.display = 'flex';
         currentSection.innerHTML = `
-          <div class="current-cover" onclick="openDetail('${currentBook.id}')">
-            <img src="${currentBook.cover}" alt="${currentBook.title}" onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop'">
+          <div class="current-cover" onclick="openDetail('${escapeHtml(currentBook.id)}')">
+            <img src="${escapeHtml(currentBook.cover)}" alt="${escapeHtml(currentBook.title)}" onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop'">
           </div>
           <div class="current-details">
             <span class="status-badge">Currently Reading</span>
-            <h2 class="current-title">${currentBook.title}</h2>
-            <p class="current-author">${currentBook.author}</p>
+            <h2 class="current-title">${escapeHtml(currentBook.title)}</h2>
+            <p class="current-author">${escapeHtml(currentBook.author)}</p>
             ${currentBook.progress ? `
             <div class="progress-container">
               <div class="progress-label"><span>Progress</span><span>${currentBook.progress}%</span></div>
@@ -780,12 +975,12 @@
     if (readGrid) {
       const readBooks = books.filter(b => b.status !== 'reading');
       readGrid.innerHTML = readBooks.map(book => `
-        <div class="book-card" onclick="openDetail('${book.id}')">
+        <div class="book-card" onclick="openDetail('${escapeHtml(book.id)}')">
           <div class="book-card-cover">
-            <img src="${book.cover}" alt="${book.title}" onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop'">
+            <img src="${escapeHtml(book.cover)}" alt="${escapeHtml(book.title)}" onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop'">
           </div>
-          <h3 class="book-card-title">${book.title}</h3>
-          <p class="book-card-author">${book.author}</p>
+          <h3 class="book-card-title">${escapeHtml(book.title)}</h3>
+          <p class="book-card-author">${escapeHtml(book.author)}</p>
         </div>
       `).join('');
     }
