@@ -19,6 +19,53 @@
 
   const NS = 'http://www.w3.org/2000/svg';
 
+  /* ══════════════════════════════════════════════════
+     ROUTING
+     ══════════════════════════════════════════════════ */
+  const ROUTES = {
+    home: { path: '/', label: 'Home' },
+    about: { path: '/who-am-i', label: 'Who Am I?' },
+    notes: { path: '/notes', label: 'Notes' },
+    work: { path: '/work', label: 'Work' },
+    reading: { path: '/the-shelf', label: 'The Shelf' },
+    hello: { path: '/say-hello', label: 'Say Hello' }
+  };
+
+  const APP_BASE = (() => {
+    try {
+      const script = document.currentScript || Array.from(document.scripts).find(s => /(?:^|\/)main\.js(?:\?|$)/.test(s.src));
+      if (script && script.src) {
+        const dir = new URL('.', script.src).pathname;
+        return dir.endsWith('/') ? dir : dir + '/';
+      }
+    } catch (err) { /* fall through */ }
+    return '/';
+  })();
+
+  const LEGACY_HASHES = {
+    '#about': 'about',
+    '#work': 'work',
+    '#notes': 'notes',
+    '#reading': 'reading'
+  };
+
+  const slugify = value => String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  function pathForRoute(id) {
+    return APP_BASE.replace(/\/$/, '') + (ROUTES[id] || ROUTES.home).path;
+  }
+
+  function routeFromPath(pathname) {
+    let path = pathname || '/';
+    if (APP_BASE !== '/' && path.startsWith(APP_BASE)) {
+      path = '/' + path.slice(APP_BASE.length);
+    } else if (APP_BASE !== '/' && path === APP_BASE.slice(0, -1)) {
+      path = '/';
+    }
+    path = path.replace(/\/+$/, '') || '/';
+    return Object.keys(ROUTES).find(id => ROUTES[id].path === path) || 'home';
+  }
+
   // 4 Orbiting Nodes (Who Am I, Work, The Shelf, Notes)
   const NODES = [
     { id: 'about', label: 'Who Am I?', angle: -1.90, rad: 0.80, speed: 0.038, size: 7.5, title: 'Who Am I?', desc: 'My story, systems thinking philosophy, background and engineering values.' },
@@ -214,6 +261,16 @@
 
   ];
 
+  const BOOKS_KEY = 'ibrahim-gana:shelf';
+  try {
+    const savedBooks = JSON.parse(localStorage.getItem(BOOKS_KEY) || 'null');
+    if (Array.isArray(savedBooks) && savedBooks.length) books = savedBooks;
+  } catch (err) { /* keep the default shelf */ }
+
+  function saveBooks() {
+    try { localStorage.setItem(BOOKS_KEY, JSON.stringify(books)); } catch (err) { /* storage unavailable */ }
+  }
+
   /* ══════════════════════════════════════════════════
      DOM ELEMENTS
      ══════════════════════════════════════════════════ */
@@ -231,11 +288,14 @@
   const ruleEl = document.getElementById('rule');
   const page = document.getElementById('page');
   const pageInner = document.getElementById('pageInner');
+  const homeView = document.getElementById('homeView');
+  const siteNav = document.querySelector('.site-nav');
+  const skipLink = document.getElementById('skipLink');
 
   let W = 0, H = 0, DPR = 1, cx = 0, cy = 0, pr = 0, R = 0, T = 0;
   let appear = 0, appearStart = 0, loaded = false;
   let activeNode = null, tooltipW = 240, tooltipH = 120;
-  let pageOpen = false, openOrigin = null, lastFocusedNode = null;
+  let currentRoute = null, lastFocusedNode = null;
   let pointer = { x: -9999, y: -9999, active: false, nx: 0, ny: 0 };
   let parallax = { x: 0, y: 0 }, rotOffset = 0, rotTarget = 0;
 
@@ -304,10 +364,6 @@
       loaded = true;
       appearStart = performance.now();
       setTimeout(() => { loader.remove(); }, 1000);
-      const id = location.hash.replace('#', '');
-      if (id === 'about' || id === 'work' || id === 'notes' || id === 'reading') {
-        setTimeout(() => navigate(id), 900);
-      }
     }, RM ? 0 : 240);
   }
 
@@ -531,7 +587,7 @@
     rotTarget = canParallax ? pointer.nx * 0.12 : 0;
     rotOffset += (rotTarget - rotOffset) * 0.04;
 
-    if (!pageOpen && !document.hidden) {
+    if (currentRoute === 'home' && !document.hidden) {
       updateNodes(); updateParticles(); draw(); updateLabels(); updateTooltip();
     }
     requestAnimationFrame(loop);
@@ -743,7 +799,7 @@
             aboutRevealObserver.unobserve(entry.target);
           }
         }
-      }, { root: page, threshold: 0.12 });
+      }, { root: null, threshold: 0.12 });
       reveals.forEach(el => aboutRevealObserver.observe(el));
     } else {
       reveals.forEach(el => el.classList.add('is-revealed'));
@@ -751,7 +807,7 @@
   }
 
   let aboutRailRaf = 0;
-  page.addEventListener('scroll', () => {
+  window.addEventListener('scroll', () => {
     if (!aboutRail || aboutRailRaf) return;
     aboutRailRaf = requestAnimationFrame(() => { aboutRailRaf = 0; updateAboutRail(); });
   }, { passive: true });
@@ -760,151 +816,331 @@
   /* ══════════════════════════════════════════════════
      PAGE NAVIGATION & RENDERING
      ══════════════════════════════════════════════════ */
-  function navigate(id) {
-    if (id === 'home') { goBack(); return; }
+  const PAGE_TITLES = {
+    home: 'Ibrahim Gana — Eventually, everything connects',
+    about: 'Who Am I? — Ibrahim Gana',
+    notes: 'Notes — Ibrahim Gana',
+    work: 'Work — Ibrahim Gana',
+    reading: 'The Shelf — Ibrahim Gana',
+    hello: 'Say Hello — Ibrahim Gana'
+  };
 
-    const validIds = ['about', 'work', 'notes', 'reading'];
-    if (!validIds.includes(id)) return;
+  const workSlug = work => slugify(work.title);
+  const noteSlug = note => slugify(note.title);
+  const findWork = slug => WORKS.find(w => workSlug(w) === slug);
+  const findNote = slug => ESSAYS.find(n => noteSlug(n) === slug);
 
-    let switching = false;
-    if (pageOpen) {
-      if (page.dataset.current === id) return;
-      switching = true;
-      pageOpen = false;
-      page.classList.remove('is-open');
-      document.body.classList.remove('page-open');
-      page.hidden = true;
+  function updateNav(id) {
+    if (siteNav) {
+      siteNav.querySelectorAll('a[data-route]').forEach(link => {
+        if (link.dataset.route === id) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+      });
     }
+    if (skipLink) skipLink.setAttribute('href', id === 'home' ? '#homeView' : '#page');
+  }
 
-    pageOpen = true;
-    page.dataset.current = id;
-    page.scrollTop = 0;
-    page.classList.toggle('reading-mode', id === 'reading');
-    page.classList.toggle('about-mode', id === 'about');
-    if (id !== 'about') aboutRail = null;
-    setActive(null);
+  function detailForRoute(route) {
+    const params = new URLSearchParams(window.location.search);
+    if (route === 'work') return params.get('work');
+    if (route === 'notes') return params.get('note');
+    return null;
+  }
 
-    const n = NODES.find(x => x.id === id);
-    const rect = canvas.getBoundingClientRect();
-    const x = n ? rect.left + n.x : window.innerWidth / 2;
-    const y = n ? rect.top + n.y : window.innerHeight / 2;
-    openOrigin = { x, y };
+  function routeUrl(route, detail) {
+    const key = route === 'work' ? 'work' : route === 'notes' ? 'note' : null;
+    return pathForRoute(route) + (key && detail ? '?' + key + '=' + encodeURIComponent(detail) : '');
+  }
 
-    if (id === 'reading') {
-      pageInner.innerHTML = `
-        <button class="page-back" onclick="goBack()">← Back to the network</button>
-        <div class="reading-header">
-          <p class="page-kicker">03 — Library</p>
-          <h1 class="page-title">The Shelf.</h1>
-          <p class="page-desc">Books that shaped how I think about craft, systems, and cognition. Currently reading and selected library additions.</p>
-        </div>
-        <section id="currentSection" class="current-reading"></section>
-        <section>
-          <div class="reading-section-header">
-            <h2>Selected readings</h2>
-            <button class="add-btn" id="openAddModal">+ Add a book</button>
-          </div>
-          <div class="book-grid" id="readGrid"></div>
-        </section>
-      `;
-      renderBooks();
-    } else if (id === 'work') {
-      pageInner.innerHTML = `
-        <button class="page-back" onclick="goBack()">← Back to the network</button>
+  function renderWorkIndex() {
+    return `
+      <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
+      <header class="route-head">
         <p class="page-kicker">02 — Selected Works</p>
-        <h2 class="page-title">Things I have built</h2>
+        <h1 class="page-title">Things I have built</h1>
         <p class="page-desc">Systems, interaction models, and tools described by their architecture, constraints, and outcomes.</p>
-        <div class="work-list">
-          ${WORKS.map(w => `
-            <article class="work-item">
-              <div class="work-header">
-                <h3 class="work-name">${w.title}</h3>
-                <span class="work-meta">${w.role} · ${w.year}</span>
-              </div>
-              <p class="work-desc">${w.desc}</p>
-              <div class="work-tags">
-                ${w.tags.map(tag => `<span class="work-tag">${tag}</span>`).join('')}
-              </div>
-            </article>
-          `).join('')}
+      </header>
+      <div class="work-list">
+        ${WORKS.map(work => `
+          <article class="work-item">
+            <button class="work-open" type="button" onclick="openWork('${workSlug(work)}')" aria-label="Open ${escapeHtml(work.title)}">
+              <span class="work-year" aria-hidden="true">${escapeHtml(work.year)}</span>
+              <span class="work-copy">
+                <span class="work-header">
+                  <span class="work-name">${escapeHtml(work.title)}</span>
+                  <span class="work-meta">${escapeHtml(work.role)}</span>
+                </span>
+                <span class="work-desc">${escapeHtml(work.desc)}</span>
+                <span class="work-tags">
+                  ${work.tags.map(tag => `<span class="work-tag">${escapeHtml(tag)}</span>`).join('')}
+                </span>
+                <span class="work-action">View project <span aria-hidden="true">→</span></span>
+              </span>
+            </button>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderWorkDetail(work) {
+    return `
+      <button class="page-back" type="button" onclick="closeWorkDetail()">← All work</button>
+      <article class="detail-page">
+        <header class="route-head">
+          <p class="page-kicker">Selected Work · ${escapeHtml(work.year)}</p>
+          <h1 class="page-title detail-title">${escapeHtml(work.title)}</h1>
+          <p class="detail-lede">${escapeHtml(work.desc)}</p>
+        </header>
+        <dl class="detail-meta">
+          <div><dt>Role</dt><dd>${escapeHtml(work.role)}</dd></div>
+          <div><dt>Year</dt><dd>${escapeHtml(work.year)}</dd></div>
+        </dl>
+        <div class="detail-tags">
+          ${work.tags.map(tag => `<span class="work-tag">${escapeHtml(tag)}</span>`).join('')}
         </div>
-      `;
-    } else if (id === 'notes') {
-      pageInner.innerHTML = `
-        <button class="page-back" onclick="goBack()">← Back to the network</button>
+        <div class="detail-mark" aria-hidden="true">
+          <span>${escapeHtml(work.year)}</span>
+          <span>${escapeHtml(work.title.split('—')[0].trim())}</span>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderNotesIndex() {
+    return `
+      <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
+      <header class="route-head">
         <p class="page-kicker">04 — Writings</p>
-        <h2 class="page-title">Notes & Reflections</h2>
+        <h1 class="page-title">Notes &amp; Reflections</h1>
         <p class="page-desc">Connecting ideas across design, cognitive models, system dependencies, and building on the web.</p>
-        <div class="notes-list">
-          ${ESSAYS.map(note => `
-            <article class="note-item">
-              <span class="note-meta">${note.meta}</span>
-              <h3 class="note-title">${note.title}</h3>
-              <p class="note-desc">${note.desc}</p>
-            </article>
-          `).join('')}
+      </header>
+      <div class="notes-list">
+        ${ESSAYS.map(note => `
+          <article class="note-item">
+            <button class="note-open" type="button" onclick="openNote('${noteSlug(note)}')" aria-label="Read ${escapeHtml(note.title)}">
+              <span class="note-meta">${escapeHtml(note.meta)}</span>
+              <span class="note-title">${escapeHtml(note.title)}</span>
+              <span class="note-desc">${escapeHtml(note.desc)}</span>
+              <span class="note-action">Read note <span aria-hidden="true">→</span></span>
+            </button>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function renderNoteDetail(note) {
+    return `
+      <button class="page-back" type="button" onclick="closeNoteDetail()">← All notes</button>
+      <article class="article-page">
+        <header class="route-head">
+          <p class="page-kicker">${escapeHtml(note.meta)}</p>
+          <h1 class="page-title article-title">${escapeHtml(note.title)}</h1>
+        </header>
+        <p class="article-lede">${escapeHtml(note.desc)}</p>
+        <div class="article-rule" aria-hidden="true"></div>
+        <p class="article-note">This note is part of the working archive. Longer-form versions are published as they are ready.</p>
+        <div class="article-end">
+          <span>Ibrahim Gana</span>
+          <button type="button" onclick="closeNoteDetail()">Back to all notes <span aria-hidden="true">↗</span></button>
         </div>
-      `;
-    } else if (id === 'about') {
-      pageInner.innerHTML = renderAboutPage();
+      </article>
+    `;
+  }
+
+  function renderShelfPage() {
+    return `
+      <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
+      <header class="reading-header route-head">
+        <p class="page-kicker">03 — Library</p>
+        <h1 class="page-title">The Shelf.</h1>
+        <p class="page-desc">Books that shaped how I think about craft, systems, and cognition. Currently reading and selected library additions.</p>
+      </header>
+      <section id="currentSection" class="current-reading" aria-label="Currently reading"></section>
+      <section class="shelf-section">
+        <div class="reading-section-header">
+          <h2>Read</h2>
+          <button class="add-btn" id="openAddModal" type="button">+ Add a book</button>
+        </div>
+        <div class="book-grid" id="readGrid"></div>
+      </section>
+      <section class="shelf-section">
+        <div class="reading-section-header">
+          <h2>Want to Read</h2>
+        </div>
+        <div class="book-grid" id="wantGrid"></div>
+      </section>
+    `;
+  }
+
+  function renderHelloPage() {
+    return `
+      <div class="hello-layout">
+        <div class="hello-copy">
+          <p class="page-kicker">05 — Contact</p>
+          <h1 class="page-title">Say Hello.</h1>
+          <p class="page-desc">For collaborations, questions, or just a good conversation, send a note. I read everything that arrives with care.</p>
+          <a class="hello-email" href="mailto:ibrahim@tri-ai.org">ibrahim@tri-ai.org <span aria-hidden="true">↗</span></a>
+        </div>
+        <form class="hello-form" id="helloForm">
+          <div class="form-group">
+            <label for="helloName">Name</label>
+            <input id="helloName" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="form-group">
+            <label for="helloEmail">Email</label>
+            <input id="helloEmail" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="form-group">
+            <label for="helloMessage">Message</label>
+            <textarea id="helloMessage" name="message" rows="5" required></textarea>
+          </div>
+          <button class="form-submit" type="submit">Open email draft <span aria-hidden="true">↗</span></button>
+        </form>
+      </div>
+    `;
+  }
+
+  function initHelloForm() {
+    const form = document.getElementById('helloForm');
+    if (!form) return;
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const name = document.getElementById('helloName').value.trim();
+      const email = document.getElementById('helloEmail').value.trim();
+      const message = document.getElementById('helloMessage').value.trim();
+      const subject = 'Hello from ' + (name || 'your site');
+      const body = message + (name || email ? '\n\n— ' + name + (email ? ' (' + email + ')' : '') : '');
+      window.location.href = 'mailto:ibrahim@tri-ai.org?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    });
+  }
+
+  function renderRoute(id, options = {}) {
+    const route = ROUTES[id] ? id : 'home';
+    const detail = options.detail || null;
+    const isHome = route === 'home';
+    const previous = currentRoute;
+
+    if (!options.initial) {
+      if (options.replace) {
+        history.replaceState({ route, detail }, '', routeUrl(route, detail));
+      } else if (options.push !== false) {
+        history.pushState({ route, detail }, '', routeUrl(route, detail));
+      }
     }
 
-    if (switching) history.replaceState({ page: id }, '', '#' + id);
-    else history.pushState({ page: id }, '', '#' + id);
-    document.body.classList.add('page-open');
+    currentRoute = route;
+    document.body.classList.toggle('page-open', !isHome);
+    if (homeView) homeView.hidden = !isHome;
+    if (page) page.hidden = isHome;
+    if (page) page.dataset.current = route;
+    updateNav(route);
 
-    page.hidden = false;
+    if (isHome) {
+      if (page) {
+        page.classList.remove('is-open');
+        page.classList.remove('about-mode', 'reading-mode', 'work-mode', 'notes-mode', 'hello-mode');
+      }
+      pageInner.innerHTML = '';
+      aboutRail = null;
+      setActive(null);
+      closeModals();
+      document.title = PAGE_TITLES.home;
+      window.scrollTo(0, 0);
+      if (previous && previous !== 'home') homeView.focus({ preventScroll: true });
+      requestAnimationFrame(() => resize());
+      return;
+    }
+
+    closeModals();
+    setActive(null);
+    if (route !== 'about') aboutRail = null;
+
     page.classList.remove('is-open');
-    if (id === 'about') initAboutPage();
+    page.classList.toggle('about-mode', route === 'about');
+    page.classList.toggle('reading-mode', route === 'reading');
+    page.classList.toggle('work-mode', route === 'work');
+    page.classList.toggle('notes-mode', route === 'notes');
+    page.classList.toggle('hello-mode', route === 'hello');
 
-    page.style.transition = 'none';
-    page.style.clipPath = 'circle(0px at ' + x + 'px ' + y + 'px)';
-    page.style.webkitClipPath = 'circle(0px at ' + x + 'px ' + y + 'px)';
-    void page.offsetWidth;
-    page.style.transition = '';
+    let work = null;
+    let note = null;
+    if (route === 'work') work = findWork(detail);
+    if (route === 'notes') note = findNote(detail);
 
-    const maxR = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y)) + 80;
+    let title = PAGE_TITLES[route];
+    if (work) title = work.title + ' — Ibrahim Gana';
+    if (note) title = note.title + ' — Ibrahim Gana';
+    document.title = title;
+
+    if (route === 'about') {
+      pageInner.innerHTML = renderAboutPage();
+    } else if (route === 'work') {
+      pageInner.innerHTML = work ? renderWorkDetail(work) : renderWorkIndex();
+    } else if (route === 'notes') {
+      pageInner.innerHTML = note ? renderNoteDetail(note) : renderNotesIndex();
+    } else if (route === 'reading') {
+      pageInner.innerHTML = renderShelfPage();
+    } else if (route === 'hello') {
+      pageInner.innerHTML = renderHelloPage();
+    }
+
+    window.scrollTo(0, 0);
+    if (route === 'about') initAboutPage();
+    if (route === 'reading') renderBooks();
+    if (route === 'hello') initHelloForm();
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        if (!pageOpen) return;
+        if (currentRoute !== route) return;
         page.classList.add('is-open');
-        page.style.clipPath = 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)';
-        page.style.webkitClipPath = 'circle(' + maxR + 'px at ' + x + 'px ' + y + 'px)';
-        if (id === 'about') updateAboutRail();
+        if (route === 'about') updateAboutRail();
       });
     });
 
-    setTimeout(() => {
-      if (pageOpen) {
-        const backBtn = page.querySelector('.page-back');
-        if (backBtn) backBtn.focus({ preventScroll: true });
-      }
-    }, RM ? 0 : 460);
+    if (!options.initial) {
+      setTimeout(() => {
+        if (currentRoute === route && page) page.focus({ preventScroll: true });
+      }, RM ? 0 : 60);
+    }
+  }
+
+  function navigate(id, options = {}) {
+    const route = ROUTES[id] ? id : 'home';
+    if (route === currentRoute && !options.detail && !detailForRoute(route)) {
+      window.scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' });
+      return;
+    }
+    renderRoute(route, options);
   }
 
   window.goToPage = function (id) { navigate(id); };
+  window.openWork = function (slug) { navigate('work', { detail: slug }); };
+  window.closeWorkDetail = function () { navigate('work'); };
+  window.openNote = function (slug) { navigate('notes', { detail: slug }); };
+  window.closeNoteDetail = function () { navigate('notes'); };
+  window.goBack = function () { if (currentRoute !== 'home') navigate('home'); };
 
-  window.goBack = function () {
-    if (!pageOpen) return;
-    pageOpen = false;
-    page.dataset.current = '';
+  if (siteNav) {
+    siteNav.querySelectorAll('a[data-route]').forEach(link => {
+      link.href = pathForRoute(link.dataset.route);
+      link.addEventListener('click', event => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        navigate(link.dataset.route);
+      });
+    });
+  }
 
-    page.classList.remove('is-open');
-    document.body.classList.remove('page-open');
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && currentRoute && currentRoute !== 'home') goBack();
+  });
 
-    const o = openOrigin || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    page.style.clipPath = 'circle(0px at ' + o.x + 'px ' + o.y + 'px)';
-    page.style.webkitClipPath = 'circle(0px at ' + o.x + 'px ' + o.y + 'px)';
-
-    setTimeout(() => { if (!pageOpen) page.hidden = true; }, RM ? 20 : 980);
-
-    history.replaceState(null, '', location.pathname);
-    if (lastFocusedNode && lastFocusedNode.el) lastFocusedNode.el.focus({ preventScroll: true });
-  };
-
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && pageOpen) goBack(); });
-  window.addEventListener('popstate', () => { if (pageOpen) goBack(); });
+  window.addEventListener('popstate', () => {
+    const route = routeFromPath(window.location.pathname);
+    renderRoute(route, { push: false, detail: detailForRoute(route) });
+  });
 
   /* ══════════════════════════════════════════════════
      READING PAGE LOGIC
@@ -943,6 +1179,7 @@
     const cover = document.getElementById('inputCover').value || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop';
     const status = document.getElementById('inputStatus').value;
     books.push({ id: Date.now().toString(), title, author, cover, status });
+    saveBooks();
     renderBooks();
     e.target.reset();
     closeModals();
@@ -972,21 +1209,34 @@
         `;
       } else {
         currentSection.style.display = 'none';
+        currentSection.innerHTML = '';
       }
     }
 
+    const bookCard = book => `
+      <div class="book-card" onclick="openDetail('${escapeHtml(book.id)}')">
+        <div class="book-card-cover">
+          <img src="${escapeHtml(book.cover)}" alt="${escapeHtml(book.title)}" onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop'">
+        </div>
+        <h3 class="book-card-title">${escapeHtml(book.title)}</h3>
+        <p class="book-card-author">${escapeHtml(book.author)}</p>
+      </div>
+    `;
+
     const readGrid = document.getElementById('readGrid');
     if (readGrid) {
-      const readBooks = books.filter(b => b.status !== 'reading');
-      readGrid.innerHTML = readBooks.map(book => `
-        <div class="book-card" onclick="openDetail('${escapeHtml(book.id)}')">
-          <div class="book-card-cover">
-            <img src="${escapeHtml(book.cover)}" alt="${escapeHtml(book.title)}" onerror="this.src='https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop'">
-          </div>
-          <h3 class="book-card-title">${escapeHtml(book.title)}</h3>
-          <p class="book-card-author">${escapeHtml(book.author)}</p>
-        </div>
-      `).join('');
+      const readBooks = books.filter(b => b.status === 'read');
+      readGrid.innerHTML = readBooks.length
+        ? readBooks.map(bookCard).join('')
+        : '<p class="shelf-empty">No books marked as read yet.</p>';
+    }
+
+    const wantGrid = document.getElementById('wantGrid');
+    if (wantGrid) {
+      const wantBooks = books.filter(b => b.status === 'want');
+      wantGrid.innerHTML = wantBooks.length
+        ? wantBooks.map(bookCard).join('')
+        : '<p class="shelf-empty">Nothing queued yet. The next book will find its way here.</p>';
     }
   }
 
@@ -1037,10 +1287,32 @@
   /* ══════════════════════════════════════════════════
      BOOT
      ══════════════════════════════════════════════════ */
+  function resolveInitialRoute() {
+    try {
+      const redirect = sessionStorage.getItem('spa:redirect');
+      if (redirect) {
+        sessionStorage.removeItem('spa:redirect');
+        const target = new URL(redirect, window.location.origin);
+        window.history.replaceState(null, '', target.pathname + target.search + target.hash);
+      }
+    } catch (err) { /* ignore unavailable session storage */ }
+
+    if (LEGACY_HASHES[window.location.hash]) {
+      const id = LEGACY_HASHES[window.location.hash];
+      window.history.replaceState(null, '', pathForRoute(id));
+      return id;
+    }
+
+    return routeFromPath(window.location.pathname);
+  }
+
   buildLabels(); resize();
   if ('ResizeObserver' in window) new ResizeObserver(() => resize()).observe(stage);
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', () => setTimeout(resize, 150));
+
+  const initialRoute = resolveInitialRoute();
+  renderRoute(initialRoute, { initial: true, detail: detailForRoute(initialRoute) });
 
   startLoader();
   requestAnimationFrame(loop);
