@@ -651,7 +651,7 @@
     return `
       <figure class="about-portrait-figure" data-reveal>
         <div class="about-media-frame about-portrait-frame${hasSrc ? '' : ' is-placeholder'}">${inner}</div>
-        <figcaption><span>Ibrahim Gana</span>${hasSrc ? '' : '<span class="media-replace">Replace</span>'}</figcaption>
+        ${hasSrc ? '' : '<figcaption><span>Portrait</span><span class="media-replace">Replace</span></figcaption>'}
       </figure>`;
   }
 
@@ -660,10 +660,14 @@
       <button class="page-back" onclick="goBack()">← Back to the network</button>
 
       <header class="about-intro">
-        <div class="about-intro-text">
+        <div class="about-identity">
           <p class="page-kicker">01 — Who Am I?</p>
           <h1 class="about-title">Who Am I?</h1>
-          <p class="about-lede">I have taken a few unexpected turns. From facilities management to technology, startups and AI. This is how I got here.</p>
+          <div class="about-identity-block">
+            <h2 class="about-name">Ibrahim Gana</h2>
+            <p class="roles about-roles">Design Engineer · Systems Thinker · Builder</p>
+          </div>
+          <p class="about-lede">I build at the intersection of design, technology, research, and systems thinking. I am interested in how things work, how ideas connect, and how different disciplines come together to shape what we create.</p>
         </div>
         ${aboutPortraitHTML()}
       </header>
