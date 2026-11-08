@@ -289,7 +289,6 @@
   const page = document.getElementById('page');
   const pageInner = document.getElementById('pageInner');
   const homeView = document.getElementById('homeView');
-  const siteNav = document.querySelector('.site-nav');
   const skipLink = document.getElementById('skipLink');
 
   let W = 0, H = 0, DPR = 1, cx = 0, cy = 0, pr = 0, R = 0, T = 0;
@@ -752,12 +751,6 @@
       <section class="about-closing" aria-labelledby="aboutClosingTitle">
         <h2 class="about-closing-quote" id="aboutClosingTitle">Eventually, <em>everything</em> connects.</h2>
         <p class="about-closing-text">What started as a decision to attend a conference became a journey through technology, teaching, entrepreneurship and research. I am still exploring. Still learning. Still building.</p>
-        <nav class="about-closing-links" aria-label="Continue exploring">
-          <button type="button" onclick="goBack()">Notes <span class="closing-arrow" aria-hidden="true">↗</span></button>
-          <button type="button" onclick="goToPage('work')">Work <span class="closing-arrow" aria-hidden="true">↗</span></button>
-          <button type="button" onclick="goToPage('reading')">The Shelf <span class="closing-arrow" aria-hidden="true">↗</span></button>
-          <a href="mailto:ibrahim@tri-ai.org">Say Hello <span class="closing-arrow" aria-hidden="true">↗</span></a>
-        </nav>
       </section>
     `;
   }
@@ -831,13 +824,27 @@
   const findNote = slug => ESSAYS.find(n => noteSlug(n) === slug);
 
   function updateNav(id) {
-    if (siteNav) {
-      siteNav.querySelectorAll('a[data-route]').forEach(link => {
-        if (link.dataset.route === id) link.setAttribute('aria-current', 'page');
-        else link.removeAttribute('aria-current');
-      });
-    }
     if (skipLink) skipLink.setAttribute('href', id === 'home' ? '#homeView' : '#page');
+  }
+
+  const BOTTOM_NAV_ITEMS = [
+    { route: 'about', label: 'Who Am I?' },
+    { route: 'notes', label: 'Notes' },
+    { route: 'work', label: 'Work' },
+    { route: 'reading', label: 'The Shelf' },
+    { route: 'hello', label: 'Say Hello' }
+  ];
+
+  function bottomNavHTML(activeRoute) {
+    return `
+      <div class="page-nav">
+        <nav class="about-closing-links" aria-label="Page navigation">
+          ${BOTTOM_NAV_ITEMS.map(item => `
+            <a href="${pathForRoute(item.route)}" data-route="${item.route}"${item.route === activeRoute ? ' aria-current="page"' : ''}>${item.label} <span class="closing-arrow" aria-hidden="true">↗</span></a>
+          `).join('')}
+        </nav>
+      </div>
+    `;
   }
 
   function detailForRoute(route) {
@@ -1031,7 +1038,6 @@
     }
 
     currentRoute = route;
-    if (siteFooter) siteFooter.hidden = isHome;
 
     document.body.classList.toggle('page-open', !isHome);
     if (homeView) homeView.hidden = !isHome;
@@ -1087,6 +1093,7 @@
     } else if (route === 'hello') {
       pageInner.innerHTML = renderHelloPage();
     }
+    pageInner.insertAdjacentHTML('beforeend', bottomNavHTML(route));
 
     window.scrollTo(0, 0);
     if (route === 'about') initAboutPage();
@@ -1124,16 +1131,13 @@
   window.closeNoteDetail = function () { navigate('notes'); };
   window.goBack = function () { if (currentRoute !== 'home') navigate('home'); };
 
-  if (siteNav) {
-    siteNav.querySelectorAll('a[data-route]').forEach(link => {
-      link.href = pathForRoute(link.dataset.route);
-      link.addEventListener('click', event => {
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        navigate(link.dataset.route);
-      });
-    });
-  }
+  pageInner.addEventListener('click', event => {
+    const link = event.target.closest('.page-nav a[data-route]');
+    if (!link) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    navigate(link.dataset.route);
+  });
 
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && currentRoute && currentRoute !== 'home') goBack();
