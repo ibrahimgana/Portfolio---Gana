@@ -127,27 +127,30 @@
     }
   ];
 
-  const ESSAYS = [
-    {
-      title: 'Memory Is an Interface',
-      meta: 'Essay · 6 min read',
-      desc: 'Why humans remember through physical and conceptual spaces, and how software fails when it forces hierarchical folders over semantic trails.'
-    },
-    {
-      title: 'Dependencies Are the Real Material',
-      meta: 'Observation · 4 min read',
-      desc: 'In software and architecture alike, you do not build with pixels or functions — you build with the contracts and coupling between them.'
-    },
-    {
-      title: 'Second-Order Design',
-      meta: 'Reflection · 5 min read',
-      desc: 'Designing not just for how a product looks on day one, but for how users will adapt, bend, and subvert its rules over time.'
-    },
-    {
-      title: 'The Topology of Taste',
-      meta: 'Essay · 7 min read',
-      desc: 'Good taste is not an unexplainable gift — it is a high-resolution mental map built by cataloging thousands of subtle differences.'
-    }
+  /* ══════════════════════════════════════════════════
+     NOTES — MINDLINES SUBSTACK INTEGRATION
+     The RSS feed is snapshotted into substack-articles.js
+     by `node sync-substack.js` (Substack does not allow
+     cross-origin browser requests). Re-run that script
+     when new articles are published.
+     ══════════════════════════════════════════════════ */
+  const SUBSTACK_FEED_URL = 'https://mindlines.substack.com/feed';
+  const SUBSTACK_ARTICLES = Array.isArray(window.SUBSTACK_ARTICLES) ? window.SUBSTACK_ARTICLES : [];
+  if (!SUBSTACK_ARTICLES.length) {
+    console.warn('No Substack snapshot loaded. Run "node sync-substack.js" to fetch ' + SUBSTACK_FEED_URL);
+  }
+
+  /* Curated list of featured articles, in display order.
+     Use the slug from the article URL:
+     https://mindlines.substack.com/p/<slug>
+     Add, remove or reorder entries to control the Notes page. */
+  const SUBSTACK_FEATURED = [
+    'lifenote-1-theme-for-the-year-motion',
+    'welcome-to-mindlines',
+    '11-the-shopify-story-how-a-small',
+    '10-play-bigger-building-and-dominating',
+    '9-fighting-for-integrity-in-a-system',
+    '8-formation-reflections-on-how-nigeria'
   ];
 
   /* ══════════════════════════════════════════════════
@@ -819,9 +822,43 @@
   };
 
   const workSlug = work => slugify(work.title);
-  const noteSlug = note => slugify(note.title);
   const findWork = slug => WORKS.find(w => workSlug(w) === slug);
-  const findNote = slug => ESSAYS.find(n => noteSlug(n) === slug);
+
+  function noteFromSubstack(article) {
+    return {
+      slug: article.slug,
+      title: article.title,
+      meta: article.dateLabel || 'Mindlines',
+      desc: article.description || '',
+      url: article.url,
+      image: article.image,
+      content: article.content || '',
+      source: 'substack'
+    };
+  }
+
+  function readingMinutes(content) {
+    const text = String(content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!text) return 0;
+    return Math.max(1, Math.round(text.split(' ').length / 220));
+  }
+
+  function featuredNotes() {
+    return SUBSTACK_FEATURED
+      .map(slug => SUBSTACK_ARTICLES.find(article => article.slug === slug))
+      .filter(Boolean)
+      .map(article => {
+        const note = noteFromSubstack(article);
+        const minutes = readingMinutes(article.content);
+        if (minutes) note.meta = note.meta + ' · ' + minutes + ' min read';
+        return note;
+      });
+  }
+
+  const findNote = slug => {
+    const article = SUBSTACK_ARTICLES.find(item => item.slug === slug);
+    return article ? noteFromSubstack(article) : null;
+  };
 
   function updateNav(id) {
     if (skipLink) skipLink.setAttribute('href', id === 'home' ? '#homeView' : '#page');
@@ -915,24 +952,25 @@
   }
 
   function renderNotesIndex() {
+    const notes = featuredNotes();
     return `
       <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
       <header class="route-head">
         <p class="page-kicker">04 — Writings</p>
         <h1 class="page-title">Notes &amp; Reflections</h1>
-        <p class="page-desc">Connecting ideas across design, cognitive models, system dependencies, and building on the web.</p>
+        <p class="page-desc">Essays and reflections from Mindlines, on books, ideas, history, curiosity, and lived experience.</p>
       </header>
       <div class="notes-list">
-        ${ESSAYS.map(note => `
+        ${notes.length ? notes.map(note => `
           <article class="note-item">
-            <button class="note-open" type="button" onclick="openNote('${noteSlug(note)}')" aria-label="Read ${escapeHtml(note.title)}">
+            <button class="note-open" type="button" onclick="openNote('${escapeHtml(note.slug)}')" aria-label="Read ${escapeHtml(note.title)}">
               <span class="note-meta">${escapeHtml(note.meta)}</span>
               <span class="note-title">${escapeHtml(note.title)}</span>
-              <span class="note-desc">${escapeHtml(note.desc)}</span>
+              ${note.desc ? `<span class="note-desc">${escapeHtml(note.desc)}</span>` : ''}
               <span class="note-action">Read note <span aria-hidden="true">→</span></span>
             </button>
           </article>
-        `).join('')}
+        `).join('') : '<p class="notes-empty">New writing from Mindlines is on its way.</p>'}
       </div>
     `;
   }
@@ -945,15 +983,111 @@
           <p class="page-kicker">${escapeHtml(note.meta)}</p>
           <h1 class="page-title article-title">${escapeHtml(note.title)}</h1>
         </header>
-        <p class="article-lede">${escapeHtml(note.desc)}</p>
+        ${note.desc ? `<p class="article-lede">${escapeHtml(note.desc)}</p>` : ''}
         <div class="article-rule" aria-hidden="true"></div>
-        <p class="article-note">This note is part of the working archive. Longer-form versions are published as they are ready.</p>
+        <div class="article-body" id="articleBody"></div>
         <div class="article-end">
-          <span>Ibrahim Gana</span>
+          <a class="article-source" href="${escapeHtml(note.url)}" target="_blank" rel="noopener noreferrer">Read on Mindlines <span aria-hidden="true">↗</span></a>
           <button type="button" onclick="closeNoteDetail()">Back to all notes <span aria-hidden="true">↗</span></button>
         </div>
       </article>
     `;
+  }
+
+  const ARTICLE_ALLOWED_TAGS = [
+    'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'UL', 'OL', 'LI',
+    'B', 'STRONG', 'EM', 'I', 'U', 'S', 'BR', 'HR', 'BLOCKQUOTE',
+    'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'SPAN', 'PRE', 'CODE',
+    'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD', 'SUP', 'SUB', 'VIDEO',
+    'AUDIO'
+  ];
+
+  const ARTICLE_REMOVE_SELECTOR = [
+    'script', 'style', 'iframe', 'object', 'embed', 'form', 'input',
+    'button', 'textarea', 'select', 'link', 'meta', 'source', 'svg',
+    '[class*="subscription-widget"]', '[class*="subscribe-widget"]',
+    '[class*="paywall"]', '[class*="post-cta"]', '.twitter-embed',
+    '.image-link-expand', '[class*="share"]'
+  ].join(',');
+
+  function absoluteArticleUrl(value) {
+    const url = String(value || '').trim();
+    if (!url || /^(https?:|mailto:|tel:|data:|#)/i.test(url)) return url;
+    try {
+      return new URL(url, 'https://mindlines.substack.com').href;
+    } catch (err) {
+      return url;
+    }
+  }
+
+  function sanitizeArticleHtml(raw) {
+    if (!raw) return '';
+    const doc = new DOMParser().parseFromString('<div id="articleRoot">' + raw + '</div>', 'text/html');
+    const root = doc.getElementById('articleRoot');
+    if (!root) return '';
+
+    root.querySelectorAll(ARTICLE_REMOVE_SELECTOR).forEach(el => el.remove());
+
+    root.querySelectorAll('.pullquote').forEach(el => {
+      const quote = doc.createElement('blockquote');
+      quote.append.apply(quote, Array.from(el.childNodes));
+      el.replaceWith(quote);
+    });
+
+    root.querySelectorAll('*').forEach(el => {
+      if (!ARTICLE_ALLOWED_TAGS.includes(el.tagName)) {
+        el.replaceWith.apply(el, Array.from(el.childNodes));
+      }
+    });
+
+    root.querySelectorAll('*').forEach(el => {
+      Array.from(el.attributes).forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (name.startsWith('on') || name === 'style' || name === 'class' || name === 'id' ||
+          name === 'srcset' || name === 'sizes' || name === 'data-attrs' ||
+          name === 'fetchpriority' || name === 'loading') {
+          el.removeAttribute(attr.name);
+        } else if ((name === 'href' || name === 'src') && /^\s*(javascript:|data:text\/html)/i.test(attr.value)) {
+          el.removeAttribute(attr.name);
+        }
+      });
+
+      if (el.tagName === 'A') {
+        const href = el.getAttribute('href');
+        if (href) {
+          el.setAttribute('href', absoluteArticleUrl(href));
+          if (!href.startsWith('#')) {
+            el.setAttribute('target', '_blank');
+            el.setAttribute('rel', 'noopener noreferrer');
+          }
+        }
+      }
+
+      if (el.tagName === 'IMG') {
+        const src = el.getAttribute('src');
+        if (src) el.setAttribute('src', absoluteArticleUrl(src));
+        el.setAttribute('loading', 'lazy');
+        el.setAttribute('decoding', 'async');
+      }
+
+      if (el.tagName === 'VIDEO' || el.tagName === 'AUDIO') {
+        el.setAttribute('controls', '');
+      }
+    });
+
+    root.querySelectorAll('p,h1,h2,h3,h4,h5,h6').forEach(el => {
+      if (!el.textContent.trim() && !el.querySelector('img,video,audio')) el.remove();
+    });
+
+    return root.innerHTML;
+  }
+
+  function initNoteDetail(note) {
+    const body = document.getElementById('articleBody');
+    if (!body) return;
+    body.innerHTML = note && note.content
+      ? sanitizeArticleHtml(note.content)
+      : '<p class="article-note">This article is available to read on Mindlines.</p>';
   }
 
   function renderShelfPage() {
@@ -1099,6 +1233,7 @@
     if (route === 'about') initAboutPage();
     if (route === 'reading') renderBooks();
     if (route === 'hello') initHelloForm();
+    if (route === 'notes' && note) initNoteDetail(note);
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {

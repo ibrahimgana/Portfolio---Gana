@@ -71,7 +71,7 @@ function formatDate(raw) {
   if (Number.isNaN(date.getTime())) return { iso: '', label: '' };
   return {
     iso: date.toISOString(),
-    label: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    label: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
   };
 }
 
