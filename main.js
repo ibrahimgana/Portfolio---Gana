@@ -25,6 +25,7 @@
   const ROUTES = {
     home: { path: '/', label: 'Home' },
     about: { path: '/who-am-i', label: 'Who Am I?' },
+    featured: { path: '/featured', label: 'Featured' },
     notes: { path: '/notes', label: 'Notes' },
     work: { path: '/work', label: 'Work' },
     reading: { path: '/the-shelf', label: 'The Shelf' },
@@ -124,6 +125,48 @@
       year: '2023',
       desc: 'Experiments in algorithmic layout, variable font kinetics, and optical sizing rules on responsive surfaces.',
       tags: ['Creative Coding', 'Typography', 'SVG / Canvas']
+    }
+  ];
+
+  const FEATURED_VIDEOS = [
+    {
+      id: 'pObzfHL4GHc',
+      title: 'Ibrahim Gana, Co-founder of Stylebitt on building solutions for the global fashion industry',
+      meta: 'Video interview'
+    },
+    {
+      id: 'A3yczS0rTbQ',
+      title: 'From Facility Management to Fashion Tech: The Story of Stylebitt’s Ibrahim Gana',
+      meta: 'Video feature'
+    }
+  ];
+
+  const FEATURED_WRITTEN = [
+    {
+      publication: 'Africa Fashion Tour',
+      title: 'Ibrahim Gana, fondateur de Stylebitt',
+      date: '28 June 2025',
+      url: 'https://africafashiontour.com/ibrahim-gana-stylebitt',
+      image: 'https://africafashiontour.com/wp-content/uploads/2025/06/Format-Portrait-AFT-New-2-1-768x960.png',
+      imageAlt: 'Portrait of Ibrahim Gana for Africa Fashion Tour'
+    },
+    {
+      publication: 'TechCabal',
+      title: "Nigeria's fashion industry needs software",
+      date: '10 May 2025',
+      url: 'https://techcabal.com/2025/05/10/nigeria-fashion-industry-software/',
+      image: 'https://www.google.com/s2/favicons?domain=techcabal.com&sz=128',
+      imageAlt: 'TechCabal logo',
+      logo: true
+    },
+    {
+      publication: 'TechCabal',
+      title: 'Startups on Our Radar: Issue 001',
+      date: '23 April 2025',
+      url: 'https://techcabal.com/2025/04/23/startups-on-our-radar-issue-001/',
+      image: 'https://www.google.com/s2/favicons?domain=techcabal.com&sz=128',
+      imageAlt: 'TechCabal logo',
+      logo: true
     }
   ];
 
@@ -805,6 +848,7 @@
   const PAGE_TITLES = {
     home: 'Ibrahim Gana — Eventually, everything connects',
     about: 'Who Am I? — Ibrahim Gana',
+    featured: 'Featured — Ibrahim Gana',
     notes: 'Notes — Ibrahim Gana',
     work: 'Work — Ibrahim Gana',
     reading: 'The Shelf — Ibrahim Gana',
@@ -884,7 +928,9 @@
   }
 
   const BOTTOM_NAV_ITEMS = [
+    { route: 'home', label: 'Home' },
     { route: 'about', label: 'Who Am I?' },
+    { route: 'featured', label: 'Featured' },
     { route: 'notes', label: 'Notes' },
     { route: 'work', label: 'Work' },
     { route: 'reading', label: 'The Shelf' },
@@ -1115,6 +1161,77 @@
     }
   }
 
+  function renderFeaturedPage() {
+    return `
+      <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
+      <header class="route-head featured-head">
+        <p class="page-kicker">06 — Featured</p>
+        <h1 class="page-title">In conversation &amp; in print.</h1>
+        <p class="page-desc">Interviews, profiles, and features that trace the work behind Stylebitt and the ideas that shape it.</p>
+      </header>
+      <section class="featured-section" aria-labelledby="featuredVideoHeading">
+        <div class="featured-section-head">
+          <h2 id="featuredVideoHeading">Video &amp; Podcast</h2>
+          <span class="featured-count" aria-hidden="true">${String(FEATURED_VIDEOS.length).padStart(2, '0')}</span>
+        </div>
+        <div class="featured-video-grid">
+          ${FEATURED_VIDEOS.map(video => `
+            <article class="featured-video-card">
+              <div class="featured-video-frame">
+                <button class="featured-video-play" type="button" data-video-id="${escapeHtml(video.id)}" data-video-title="${escapeHtml(video.title)}" aria-label="Play ${escapeHtml(video.title)}">
+                  <img src="https://i.ytimg.com/vi/${escapeHtml(video.id)}/maxresdefault.jpg" alt="" loading="lazy" decoding="async">
+                  <span class="featured-video-overlay" aria-hidden="true">
+                    <span class="featured-video-play-icon"></span>
+                    <span class="featured-video-play-label">Play video</span>
+                  </span>
+                </button>
+              </div>
+              <div class="featured-video-copy">
+                <p class="featured-video-meta">${escapeHtml(video.meta)}</p>
+                <h3 class="featured-video-title">${escapeHtml(video.title)}</h3>
+                <a class="featured-external-link" href="https://youtu.be/${escapeHtml(video.id)}" target="_blank" rel="noopener noreferrer">Watch on YouTube <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+      <section class="featured-section" aria-labelledby="featuredWrittenHeading">
+        <div class="featured-section-head">
+          <h2 id="featuredWrittenHeading">Written Features</h2>
+          <span class="featured-count" aria-hidden="true">${String(FEATURED_WRITTEN.length).padStart(2, '0')}</span>
+        </div>
+        <div class="featured-written-list">
+          ${FEATURED_WRITTEN.map(feature => `
+            <article class="featured-written-item">
+              <a class="featured-written-link" href="${escapeHtml(feature.url)}" target="_blank" rel="noopener noreferrer">
+                <span class="featured-written-media${feature.logo ? ' is-logo' : ''}">
+                  <img src="${escapeHtml(feature.image)}" alt="${escapeHtml(feature.imageAlt)}" loading="lazy" decoding="async">
+                </span>
+                <span class="featured-written-copy">
+                  <span class="featured-written-meta">${escapeHtml(feature.publication)} · ${escapeHtml(feature.date)}</span>
+                  <span class="featured-written-title">${escapeHtml(feature.title)}</span>
+                  <span class="featured-external-link">Read feature <span aria-hidden="true">↗</span></span>
+                </span>
+              </a>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  function initFeaturedPage() {
+    pageInner.querySelectorAll('.featured-video-play').forEach(button => {
+      button.addEventListener('click', () => {
+        const frame = button.closest('.featured-video-frame');
+        const id = button.dataset.videoId;
+        const title = button.dataset.videoTitle || 'Video';
+        if (!frame || !id) return;
+        frame.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0" title="${escapeHtml(title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+      }, { once: true });
+    });
+  }
+
   function renderShelfPage() {
     return `
       <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
@@ -1142,12 +1259,13 @@
 
   function renderHelloPage() {
     return `
+      <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
       <div class="hello-layout">
         <div class="hello-copy">
           <p class="page-kicker">05 — Contact</p>
           <h1 class="page-title">Say Hello.</h1>
           <p class="page-desc">For collaborations, questions, or just a good conversation, send a note. I read everything that arrives with care.</p>
-          <a class="hello-email" href="mailto:ibrahim@tri-ai.org">ibrahim@tri-ai.org <span aria-hidden="true">↗</span></a>
+          <a class="hello-email" href="mailto:hello@ibrahimgana.com">hello@ibrahimgana.com <span aria-hidden="true">↗</span></a>
         </div>
         <form class="hello-form" id="helloForm">
           <div class="form-group">
@@ -1178,7 +1296,7 @@
       const message = document.getElementById('helloMessage').value.trim();
       const subject = 'Hello from ' + (name || 'your site');
       const body = message + (name || email ? '\n\n— ' + name + (email ? ' (' + email + ')' : '') : '');
-      window.location.href = 'mailto:ibrahim@tri-ai.org?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      window.location.href = 'mailto:hello@ibrahimgana.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
     });
   }
 
@@ -1207,7 +1325,7 @@
     if (isHome) {
       if (page) {
         page.classList.remove('is-open');
-        page.classList.remove('about-mode', 'reading-mode', 'work-mode', 'notes-mode', 'hello-mode');
+        page.classList.remove('about-mode', 'reading-mode', 'work-mode', 'notes-mode', 'featured-mode', 'hello-mode');
       }
       pageInner.innerHTML = '';
       aboutRail = null;
@@ -1229,6 +1347,7 @@
     page.classList.toggle('reading-mode', route === 'reading');
     page.classList.toggle('work-mode', route === 'work');
     page.classList.toggle('notes-mode', route === 'notes');
+    page.classList.toggle('featured-mode', route === 'featured');
     page.classList.toggle('hello-mode', route === 'hello');
 
     let work = null;
@@ -1247,6 +1366,8 @@
       pageInner.innerHTML = work ? renderWorkDetail(work) : renderWorkIndex();
     } else if (route === 'notes') {
       pageInner.innerHTML = note ? renderNoteDetail(note) : renderNotesIndex();
+    } else if (route === 'featured') {
+      pageInner.innerHTML = renderFeaturedPage();
     } else if (route === 'reading') {
       pageInner.innerHTML = renderShelfPage();
     } else if (route === 'hello') {
@@ -1257,6 +1378,7 @@
     window.scrollTo(0, 0);
     if (route === 'about') initAboutPage();
     if (route === 'reading') renderBooks();
+    if (route === 'featured') initFeaturedPage();
     if (route === 'hello') initHelloForm();
     if (route === 'notes' && note) initNoteDetail(note);
 

@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/who-am-i", "destination": "/index.html" },
+    { "source": "/featured", "destination": "/index.html" },
     { "source": "/notes", "destination": "/index.html" },
     { "source": "/work", "destination": "/index.html" },
     { "source": "/the-shelf", "destination": "/index.html" },
