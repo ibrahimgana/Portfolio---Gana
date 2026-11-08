@@ -801,6 +801,19 @@ body.loaded .stage-hint { opacity: .8; }
 }
 .article-body video,
 .article-body audio { display: block; width: 100%; max-width: 100%; }
+.article-fallback {
+  padding: 1.1em 1.3em;
+  border-left: 2px solid var(--burgundy);
+  background: #F4F2ED;
+  font-size: .95em;
+  line-height: 1.65;
+  color: #44403B;
+}
+.article-fallback a {
+  color: var(--burgundy);
+  text-decoration: underline;
+  text-underline-offset: .18em;
+}
 .notes-empty {
   margin: 0;
   padding: clamp(28px, 5vh, 48px) 0;

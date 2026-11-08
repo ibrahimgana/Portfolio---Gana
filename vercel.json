@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    { "source": "/who-am-i", "destination": "/index.html" },
+    { "source": "/notes", "destination": "/index.html" },
+    { "source": "/work", "destination": "/index.html" },
+    { "source": "/the-shelf", "destination": "/index.html" },
+    { "source": "/say-hello", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/substack-articles.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, s-maxage=300, stale-while-revalidate=86400"
+        }
+      ]
+    }
+  ]
+}

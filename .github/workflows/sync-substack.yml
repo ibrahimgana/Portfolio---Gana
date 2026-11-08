@@ -1,0 +1,42 @@
+name: Sync Mindlines Substack
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: substack-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Refresh Substack snapshot
+        run: node sync-substack.js
+
+      - name: Commit and push changes
+        run: |
+          if git diff --quiet -- substack-articles.js; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add substack-articles.js
+          git commit -m "chore: refresh Mindlines Substack snapshot"
+          git push

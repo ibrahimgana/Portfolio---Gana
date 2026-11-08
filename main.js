@@ -129,29 +129,19 @@
 
   /* ══════════════════════════════════════════════════
      NOTES — MINDLINES SUBSTACK INTEGRATION
-     The RSS feed is snapshotted into substack-articles.js
-     by `node sync-substack.js` (Substack does not allow
-     cross-origin browser requests). Re-run that script
-     when new articles are published.
+     substack-articles.js is refreshed automatically by
+     the scheduled GitHub Action (.github/workflows/
+     sync-substack.yml). The Notes page shows the
+     earliest 2026 LifeNotes post and every Mindlines
+     article published after it.
      ══════════════════════════════════════════════════ */
   const SUBSTACK_FEED_URL = 'https://mindlines.substack.com/feed';
   const SUBSTACK_ARTICLES = Array.isArray(window.SUBSTACK_ARTICLES) ? window.SUBSTACK_ARTICLES : [];
+  const SUBSTACK_START_FALLBACK = '2026-01-11T00:00:00.000Z';
+  const SUBSTACK_ANCHOR_PATTERN = /^lifenote\b/i;
   if (!SUBSTACK_ARTICLES.length) {
     console.warn('No Substack snapshot loaded. Run "node sync-substack.js" to fetch ' + SUBSTACK_FEED_URL);
   }
-
-  /* Curated list of featured articles, in display order.
-     Use the slug from the article URL:
-     https://mindlines.substack.com/p/<slug>
-     Add, remove or reorder entries to control the Notes page. */
-  const SUBSTACK_FEATURED = [
-    'lifenote-1-theme-for-the-year-motion',
-    'welcome-to-mindlines',
-    '11-the-shopify-story-how-a-small',
-    '10-play-bigger-building-and-dominating',
-    '9-fighting-for-integrity-in-a-system',
-    '8-formation-reflections-on-how-nigeria'
-  ];
 
   /* ══════════════════════════════════════════════════
      WHO AM I? — EDITORIAL JOURNEY
@@ -824,7 +814,37 @@
   const workSlug = work => slugify(work.title);
   const findWork = slug => WORKS.find(w => workSlug(w) === slug);
 
+  function plainTextLength(html) {
+    return String(html || '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .length;
+  }
+
+  function visibleSubstackArticles() {
+    const articles = SUBSTACK_ARTICLES
+      .filter(article => article && article.slug && article.title && article.dateISO)
+      .filter(article => !Number.isNaN(Date.parse(article.dateISO)))
+      .filter(article => Date.parse(article.dateISO) <= Date.now());
+
+    const anchor = articles
+      .filter(article => article.dateISO.startsWith('2026') && SUBSTACK_ANCHOR_PATTERN.test(article.title))
+      .sort((a, b) => Date.parse(a.dateISO) - Date.parse(b.dateISO))[0];
+
+    const start = anchor ? Date.parse(anchor.dateISO) : Date.parse(SUBSTACK_START_FALLBACK);
+
+    return articles
+      .filter(article => Date.parse(article.dateISO) >= start)
+      .sort((a, b) => Date.parse(b.dateISO) - Date.parse(a.dateISO));
+  }
+
   function noteFromSubstack(article) {
+    const content = article.content || '';
+    const hasFullContent = article.hasFullContent !== undefined
+      ? Boolean(article.hasFullContent)
+      : plainTextLength(content) >= 200;
     return {
       slug: article.slug,
       title: article.title,
@@ -832,7 +852,8 @@
       desc: article.description || '',
       url: article.url,
       image: article.image,
-      content: article.content || '',
+      content,
+      hasFullContent,
       source: 'substack'
     };
   }
@@ -843,20 +864,18 @@
     return Math.max(1, Math.round(text.split(' ').length / 220));
   }
 
-  function featuredNotes() {
-    return SUBSTACK_FEATURED
-      .map(slug => SUBSTACK_ARTICLES.find(article => article.slug === slug))
-      .filter(Boolean)
-      .map(article => {
-        const note = noteFromSubstack(article);
-        const minutes = readingMinutes(article.content);
-        if (minutes) note.meta = note.meta + ' · ' + minutes + ' min read';
-        return note;
-      });
+  function visibleNotes() {
+    return visibleSubstackArticles().map(article => {
+      const note = noteFromSubstack(article);
+      const minutes = readingMinutes(article.content);
+      if (minutes) note.meta = note.meta + ' · ' + minutes + ' min read';
+      return note;
+    });
   }
 
   const findNote = slug => {
-    const article = SUBSTACK_ARTICLES.find(item => item.slug === slug);
+    if (!slug) return null;
+    const article = visibleSubstackArticles().find(item => item.slug === slug);
     return article ? noteFromSubstack(article) : null;
   };
 
@@ -952,7 +971,7 @@
   }
 
   function renderNotesIndex() {
-    const notes = featuredNotes();
+    const notes = visibleNotes();
     return `
       <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
       <header class="route-head">
@@ -1085,9 +1104,15 @@
   function initNoteDetail(note) {
     const body = document.getElementById('articleBody');
     if (!body) return;
-    body.innerHTML = note && note.content
-      ? sanitizeArticleHtml(note.content)
-      : '<p class="article-note">This article is available to read on Mindlines.</p>';
+
+    const contentHtml = note && note.content ? sanitizeArticleHtml(note.content) : '';
+    body.innerHTML = contentHtml;
+
+    if (!note || !note.hasFullContent || !contentHtml.trim()) {
+      const url = note && note.url ? note.url : SUBSTACK_FEED_URL;
+      body.insertAdjacentHTML('beforeend',
+        `<p class="article-fallback">Only an excerpt of this article is available here. <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Read the full article on Mindlines <span aria-hidden="true">↗</span></a>.</p>`);
+    }
   }
 
   function renderShelfPage() {
