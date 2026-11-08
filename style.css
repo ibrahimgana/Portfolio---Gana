@@ -168,6 +168,10 @@ body.loaded .intro > *:nth-child(4) { transition-delay: .62s; }
   text-transform: uppercase;
   color: var(--burgundy);
   margin: 0 0 28px 0;
+  white-space: nowrap;
+}
+@media (min-width: 901px) and (max-width: 1200px) {
+  .roles { font-size: 10px; letter-spacing: 0.11em; }
 }
 .philosophy {
   font-family: var(--serif);
