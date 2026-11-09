@@ -67,18 +67,20 @@
     return Object.keys(ROUTES).find(id => ROUTES[id].path === path) || 'home';
   }
 
-  // 4 Orbiting Nodes (Who Am I, Work, The Shelf, Notes)
+  // 6 Orbiting Nodes (Who Am I, Featured, Work, The Shelf, Notes, Say Hello)
   const NODES = [
     { id: 'about', label: 'Who Am I?', angle: -1.90, rad: 0.80, speed: 0.038, size: 7.5, title: 'Who Am I?', desc: 'My story, systems thinking philosophy, background and engineering values.' },
-    { id: 'work', label: 'Work', angle: -0.45, rad: 0.86, speed: -0.032, size: 8.0, title: 'Work', desc: 'Selected projects, products, architectures and experiments I have built.' },
-    { id: 'reading', label: 'The Shelf', angle: 1.05, rad: 0.78, speed: 0.035, size: 7.0, title: 'The Shelf', desc: 'Books I am reading, library archive, and distilled margin notes.' },
-    { id: 'notes', label: 'Notes', angle: 2.55, rad: 0.82, speed: -0.034, size: 7.0, title: 'Notes', desc: 'Writings on interaction design, dependencies, and cognitive topology.' }
+    { id: 'featured', label: 'Featured', angle: -0.85, rad: 0.82, speed: -0.035, size: 7.2, title: 'Featured', desc: 'Interviews, videos, podcasts and written features about my work.' },
+    { id: 'work', label: 'Work', angle: 0.19, rad: 0.86, speed: -0.032, size: 8.0, title: 'Work', desc: 'Selected projects, products, architectures and experiments I have built.' },
+    { id: 'reading', label: 'The Shelf', angle: 1.24, rad: 0.78, speed: 0.035, size: 7.0, title: 'The Shelf', desc: 'Books I am reading, library archive, and distilled margin notes.' },
+    { id: 'notes', label: 'Notes', angle: 2.29, rad: 0.82, speed: -0.034, size: 7.0, title: 'Notes', desc: 'Writings on interaction design, dependencies, and cognitive topology.' },
+    { id: 'hello', label: 'Say Hello', angle: -2.95, rad: 0.80, speed: 0.036, size: 7.3, title: 'Say Hello', desc: 'Get in touch for collaborations, questions, or a good conversation.' }
   ];
 
-  // Complete K4 graph: 4 perimeter links + 2 cross diagonals
+  // Six-node ring, with the original four cross-connections preserved
   const NODE_LINKS = [
-    [0, 1], [1, 2], [2, 3], [3, 0],
-    [0, 2], [1, 3]
+    [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0],
+    [0, 2], [0, 3], [2, 4], [0, 4]
   ];
 
   const PARTICLES = [];
@@ -417,7 +419,7 @@
     cx = W / 2; cy = H / 2;
     pr = (portrait.getBoundingClientRect().width / 2) || (W < 500 ? 44 : 54);
     R = W < 500
-      ? Math.max(pr + 42, Math.min(W * 0.35, H * 0.36))
+      ? Math.max(pr + 42, Math.min(W * 0.30, H * 0.36))
       : Math.min(W * 0.42, H * 0.44);
     NODES.forEach(n => { if (n.el) n.lw = n.el.offsetWidth || 70; });
   }
@@ -444,7 +446,7 @@
       const el = n.el; if (!el) return;
       const a = easeOut(clamp((appear - i * 0.12) / 0.64, 0, 1));
       el.style.opacity = a.toFixed(3);
-      const gap = n.size + 14;
+      const gap = n.size + (W < 500 ? 6 : 14);
 
       // Position label away from center towards outer edges
       let side = 1;

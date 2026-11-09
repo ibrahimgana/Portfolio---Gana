@@ -1641,6 +1641,16 @@ body.is-admin .add-btn { display: inline-flex; }
   }
 }
 
+@media (max-width: 340px) {
+  .node,
+  .is-touch .node {
+    font-size: 9px;
+    letter-spacing: .12em;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+}
+
 @media (max-width: 600px) {
   .page {
     padding: calc(24px + var(--safe-top)) 18px calc(40px + var(--safe-bottom));
