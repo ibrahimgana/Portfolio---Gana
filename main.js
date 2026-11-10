@@ -17,6 +17,54 @@
   document.documentElement.classList.add(isTouch ? 'is-touch' : 'is-desktop');
   document.getElementById('stageHint').textContent = isTouch ? 'Tap a node to explore' : 'Hover to read · Click to enter';
 
+  /* ══════════════════════════════════════════════════
+     THEME — LIGHT / DARK
+     The initial theme is applied pre-paint by an inline
+     script in index.html. Here we own the toggle,
+     persistence and canvas colours.
+     ══════════════════════════════════════════════════ */
+  const THEME_KEY = 'ibrahim-gana:theme';
+  const htmlEl = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const systemDark = matchMedia('(prefers-color-scheme: dark)');
+
+  let canvasInk = '28,27,26';
+  let canvasAccent = '114,47,55';
+
+  const themeIsDark = () => htmlEl.dataset.theme === 'dark';
+
+  function refreshCanvasTheme() {
+    canvasInk = themeIsDark() ? '237,232,224' : '28,27,26';
+    canvasAccent = themeIsDark() ? '180,104,113' : '114,47,55';
+  }
+
+  function applyTheme(dark, persist) {
+    htmlEl.dataset.theme = dark ? 'dark' : 'light';
+    if (themeMeta) themeMeta.setAttribute('content', dark ? '#1A1714' : '#F9F8F6');
+    if (themeToggle) {
+      themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+      themeToggle.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+    refreshCanvasTheme();
+    if (persist) {
+      try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (err) { /* storage unavailable */ }
+    }
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => { applyTheme(!themeIsDark(), true); });
+  }
+
+  const onSystemThemeChange = e => {
+    let stored = null;
+    try { stored = localStorage.getItem(THEME_KEY); } catch (err) { /* storage unavailable */ }
+    if (!stored) applyTheme(e.matches, false);
+  };
+  if (systemDark.addEventListener) systemDark.addEventListener('change', onSystemThemeChange);
+
+  applyTheme(themeIsDark(), false);
+
   const NS = 'http://www.w3.org/2000/svg';
 
   /* ══════════════════════════════════════════════════
@@ -356,12 +404,12 @@
       markLinks.appendChild(line); LINES.push(line);
       const dot = document.createElementNS(NS, 'circle');
       dot.setAttribute('cx', x); dot.setAttribute('cy', y);
-      dot.setAttribute('r', 2.8); dot.setAttribute('fill', '#1C1B1A'); dot.setAttribute('opacity', 0);
+      dot.setAttribute('r', 2.8); dot.style.fill = 'var(--loader-dot)'; dot.setAttribute('opacity', 0);
       markDots.appendChild(dot); DOTS.push(dot);
     }
     const core = document.createElementNS(NS, 'circle');
     core.setAttribute('cx', 60); core.setAttribute('cy', 60);
-    core.setAttribute('r', 3.6); core.setAttribute('fill', '#722F37'); core.setAttribute('opacity', 0);
+    core.setAttribute('r', 3.6); core.style.fill = 'var(--accent)'; core.setAttribute('opacity', 0);
     markDots.appendChild(core); DOTS.push(core);
   })();
 
@@ -535,7 +583,7 @@
     ctx.arc(0, 0, pr + 14, 0, Math.PI * 2);
     ctx.setLineDash([1.5, 7]);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(28,27,26,' + (0.20 * appear) + ')';
+    ctx.strokeStyle = 'rgba(' + canvasInk + ',' + (0.20 * appear) + ')';
     ctx.stroke();
     ctx.restore();
     ctx.setLineDash([]);
@@ -546,7 +594,7 @@
       ctx.beginPath();
       ctx.moveTo(NODES[p.parent].x, NODES[p.parent].y);
       ctx.lineTo(p.x, p.y);
-      ctx.strokeStyle = 'rgba(28,27,26,' + (0.075 * fade) + ')';
+      ctx.strokeStyle = 'rgba(' + canvasInk + ',' + (0.075 * fade) + ')';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
@@ -559,7 +607,7 @@
       ctx.beginPath();
       ctx.moveTo(A.x, A.y);
       ctx.lineTo(B.x, B.y);
-      ctx.strokeStyle = hot ? 'rgba(114,47,55,0.45)' : 'rgba(28,27,26,' + (0.085 * fade * appear) + ')';
+      ctx.strokeStyle = hot ? 'rgba(' + canvasAccent + ',0.45)' : 'rgba(' + canvasInk + ',' + (0.085 * fade * appear) + ')';
       ctx.lineWidth = hot ? 1.2 : 1;
       ctx.stroke();
     }
@@ -575,7 +623,7 @@
       ctx.beginPath();
       ctx.moveTo(x1, y1);
       ctx.lineTo(n.x, n.y);
-      ctx.strokeStyle = hot ? 'rgba(114,47,55,0.78)' : 'rgba(28,27,26,' + (0.115 * fade * appear) + ')';
+      ctx.strokeStyle = hot ? 'rgba(' + canvasAccent + ',0.78)' : 'rgba(' + canvasInk + ',' + (0.115 * fade * appear) + ')';
       ctx.lineWidth = hot ? 1.4 : 1;
       ctx.stroke();
     }
@@ -585,7 +633,7 @@
       const fade = nodeAlpha(NODES[p.parent]) * appear;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(28,27,26,' + (p.a * 0.5 * fade) + ')';
+      ctx.fillStyle = 'rgba(' + canvasInk + ',' + (p.a * 0.5 * fade) + ')';
       ctx.fill();
     }
 
@@ -599,12 +647,12 @@
       const r = n.size * na * (hot ? 1.55 : 1);
       if (hot) {
         ctx.beginPath(); ctx.arc(n.x, n.y, r + 12, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(114,47,55,0.085)'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + canvasAccent + ',0.085)'; ctx.fill();
         ctx.beginPath(); ctx.arc(n.x, n.y, r + 7, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(114,47,55,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.strokeStyle = 'rgba(' + canvasAccent + ',0.35)'; ctx.lineWidth = 1; ctx.stroke();
       }
       ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = hot ? 'rgba(114,47,55,1)' : 'rgba(28,27,26,' + (na * (0.55 + 0.45 * fade)) + ')';
+      ctx.fillStyle = hot ? 'rgba(' + canvasAccent + ',1)' : 'rgba(' + canvasInk + ',' + (na * (0.55 + 0.45 * fade)) + ')';
       ctx.fill();
     }
   }

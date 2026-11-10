@@ -8,6 +8,24 @@
   <title>Redirecting — Ibrahim Gana</title>
   <script>
     (function () {
+      var theme = 'light';
+      try {
+        var stored = localStorage.getItem('ibrahim-gana:theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        theme = (stored === 'light' || stored === 'dark') ? stored : (prefersDark ? 'dark' : 'light');
+      } catch (error) { /* storage unavailable */ }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+  <style>
+    html[data-theme="light"] body { background: #F9F8F6; color: #1C1B1A; }
+    html[data-theme="dark"] body { background: #1A1714; color: #EDE8E0; }
+    html[data-theme="light"] a { color: #722F37; }
+    html[data-theme="dark"] a { color: #B46871; }
+    body { margin: 0; padding: 24px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; }
+  </style>
+  <script>
+    (function () {
       var path = window.location.pathname + window.location.search + window.location.hash;
       try {
         sessionStorage.setItem('spa:redirect', path);
