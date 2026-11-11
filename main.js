@@ -19,15 +19,13 @@
 
   /* ══════════════════════════════════════════════════
      THEME — LIGHT / DARK
-     The initial theme is applied pre-paint by an inline
-     script in index.html. Here we own the toggle,
-     persistence and canvas colours.
+     The initial theme is always light, applied pre-paint
+     by an inline script in index.html. Here we own the
+     toggle and canvas colours.
      ══════════════════════════════════════════════════ */
-  const THEME_KEY = 'ibrahim-gana:theme';
   const htmlEl = document.documentElement;
   const themeToggle = document.getElementById('themeToggle');
   const themeMeta = document.querySelector('meta[name="theme-color"]');
-  const systemDark = matchMedia('(prefers-color-scheme: dark)');
 
   let canvasInk = '28,27,26';
   let canvasAccent = '114,47,55';
@@ -39,7 +37,7 @@
     canvasAccent = themeIsDark() ? '180,104,113' : '114,47,55';
   }
 
-  function applyTheme(dark, persist) {
+  function applyTheme(dark) {
     htmlEl.dataset.theme = dark ? 'dark' : 'light';
     if (themeMeta) themeMeta.setAttribute('content', dark ? '#1A1714' : '#F9F8F6');
     if (themeToggle) {
@@ -47,23 +45,13 @@
       themeToggle.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
     }
     refreshCanvasTheme();
-    if (persist) {
-      try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (err) { /* storage unavailable */ }
-    }
   }
 
   if (themeToggle) {
-    themeToggle.addEventListener('click', () => { applyTheme(!themeIsDark(), true); });
+    themeToggle.addEventListener('click', () => { applyTheme(!themeIsDark()); });
   }
 
-  const onSystemThemeChange = e => {
-    let stored = null;
-    try { stored = localStorage.getItem(THEME_KEY); } catch (err) { /* storage unavailable */ }
-    if (!stored) applyTheme(e.matches, false);
-  };
-  if (systemDark.addEventListener) systemDark.addEventListener('change', onSystemThemeChange);
-
-  applyTheme(themeIsDark(), false);
+  applyTheme(false);
 
   const NS = 'http://www.w3.org/2000/svg';
 

@@ -6,18 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F9F8F6">
   <script>
-    /* Apply saved / system theme before first paint to avoid a flash */
-    (function () {
-      var theme = 'light';
-      try {
-        var stored = localStorage.getItem('ibrahim-gana:theme');
-        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        theme = (stored === 'light' || stored === 'dark') ? stored : (prefersDark ? 'dark' : 'light');
-      } catch (error) { /* storage unavailable */ }
-      document.documentElement.dataset.theme = theme;
-      var meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', theme === 'dark' ? '#1A1714' : '#F9F8F6');
-    })();
+    /* Always start in light mode before first paint to avoid a flash */
+    document.documentElement.dataset.theme = 'light';
   </script>
   <title>Ibrahim Gana — Eventually, everything connects</title>
   <meta name="description" content="Ibrahim Gana. Design Engineer, Systems Thinker. Builder.">
