@@ -1579,50 +1579,6 @@
   }
 
   /* ══════════════════════════════════════════════════
-     LO-FI AUDIO CONTROLS
-     ══════════════════════════════════════════════════ */
-  const bgMusic = document.getElementById('bgMusic');
-  const soundToggle = document.getElementById('soundToggle');
-  const soundText = document.getElementById('soundText');
-  let isAudioPlaying = false;
-
-  if (bgMusic && soundToggle && soundText) {
-    bgMusic.volume = 0.35;
-
-    function playAudio() {
-      bgMusic.play().then(() => {
-        isAudioPlaying = true;
-        soundToggle.classList.add('is-playing');
-        soundText.textContent = 'Audio: On';
-      }).catch(err => {
-        console.log('Audio playback waiting for user action:', err);
-      });
-    }
-
-    function pauseAudio() {
-      bgMusic.pause();
-      isAudioPlaying = false;
-      soundToggle.classList.remove('is-playing');
-      soundText.textContent = 'Audio: Off';
-    }
-
-    soundToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (isAudioPlaying) {
-        pauseAudio();
-      } else {
-        playAudio();
-      }
-    });
-
-    bgMusic.addEventListener('pause', () => {
-      if (!bgMusic.seeking && isAudioPlaying) {
-        pauseAudio();
-      }
-    });
-  }
-
-  /* ══════════════════════════════════════════════════
      BOOT
      ══════════════════════════════════════════════════ */
   function resolveInitialRoute() {
