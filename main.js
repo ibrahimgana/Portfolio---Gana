@@ -86,8 +86,6 @@
     '#reading': 'reading'
   };
 
-  const slugify = value => String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-
   function pathForRoute(id) {
     return APP_BASE.replace(/\/$/, '') + (ROUTES[id] || ROUTES.home).path;
   }
@@ -134,37 +132,37 @@
     }
   });
 
-  // RICH PAGE CONTENT DATA
-  const WORKS = [
+  const WORK_PROJECTS = [
     {
-      title: 'Atlas — Spatial Knowledge Graph',
-      role: 'Design Engineering & Architecture',
-      year: '2025',
-      desc: 'An associative knowledge environment exploring how documents, thoughts, and dependencies link in a high-dimensional topology.',
-      tags: ['TypeScript', 'WebGL / Canvas', 'Graph Theory', 'Information Architecture']
+      slug: 'ubec',
+      index: '01',
+      title: 'UBEC',
+      category: 'Digital product · System',
+      description: 'A digital product and system built for UBEC. The full case study is being written.',
+      note: 'Project details, users, role and outcomes to follow.',
+      layout: 'lead'
     },
     {
-      title: 'Cadence — Adaptive Feedback System',
-      role: 'Systems Design & Prototyping',
-      year: '2024',
-      desc: 'Treating time and attention as a continuous closed-loop control system, adjusting calendar density based on cognitive friction.',
-      tags: ['Interaction Design', 'State Machines', 'Design Engineering']
+      slug: 'syteboxx',
+      index: '02',
+      title: 'Syteboxx',
+      category: 'Construction management system',
+      description: 'A construction management system. The full case study is being written.',
+      note: 'Product context, functionality and role to follow.',
+      layout: 'split'
     },
     {
-      title: 'Meridian — Token-Driven Design Framework',
-      role: 'Design Systems Architecture',
-      year: '2024',
-      desc: 'A compositional design system grounded in harmonic ratios, mathematical spacing constraints, and fluid type scales.',
-      tags: ['Design Systems', 'Tokens', 'CSS Architecture', 'Figma']
-    },
-    {
-      title: 'Monolith — Generative Typographic Engine',
-      role: 'Creative Engineering',
-      year: '2023',
-      desc: 'Experiments in algorithmic layout, variable font kinetics, and optical sizing rules on responsive surfaces.',
-      tags: ['Creative Coding', 'Typography', 'SVG / Canvas']
+      slug: 'orbit',
+      index: '03',
+      title: 'Orbit',
+      category: 'Internal workspace · TRI AI',
+      description: 'An internal digital workspace and navigation layer for TRI AI that brings Google Workspace tools, documents, activities and workflows into a more discoverable, organised experience.',
+      note: 'Interface, navigation model and case study to follow.',
+      layout: 'wide'
     }
   ];
+
+  const WORK_LOCK_ICON = `<svg class="work-lock-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.2" y="7" width="9.6" height="6.6" rx="1.1"></rect><path d="M5.6 7V5.3a2.4 2.4 0 0 1 4.8 0V7"></path></svg>`;
 
   const FEATURED_VIDEOS = [
     {
@@ -888,13 +886,10 @@
     about: 'Who Am I? — Ibrahim Gana',
     featured: 'Featured — Ibrahim Gana',
     notes: 'Notes — Ibrahim Gana',
-    work: 'Work — Ibrahim Gana',
+    work: 'Selected Work — Ibrahim Gana',
     reading: 'The Shelf — Ibrahim Gana',
     hello: 'Say Hello — Ibrahim Gana'
   };
-
-  const workSlug = work => slugify(work.title);
-  const findWork = slug => WORKS.find(w => workSlug(w) === slug);
 
   function plainTextLength(html) {
     return String(html || '')
@@ -989,68 +984,64 @@
 
   function detailForRoute(route) {
     const params = new URLSearchParams(window.location.search);
-    if (route === 'work') return params.get('work');
     if (route === 'notes') return params.get('note');
     return null;
   }
 
   function routeUrl(route, detail) {
-    const key = route === 'work' ? 'work' : route === 'notes' ? 'note' : null;
+    const key = route === 'notes' ? 'note' : null;
     return pathForRoute(route) + (key && detail ? '?' + key + '=' + encodeURIComponent(detail) : '');
+  }
+
+  function workVisualHTML(project) {
+    const hasImage = Boolean(project.image);
+    const inner = hasImage
+      ? `<img src="${escapeHtml(project.image)}" alt="${escapeHtml(project.imageAlt || project.title + ' project visual')}" loading="lazy" decoding="async">`
+      : `
+          <span class="work-visual-index" aria-hidden="true">${escapeHtml(project.index)}</span>
+          <span class="work-visual-mark" aria-hidden="true"></span>
+          <span class="work-visual-label">Project visual</span>
+          <span class="work-visual-note">Screenshot or mockup to be added</span>
+        `;
+    return `
+      <figure class="work-feature-visual">
+        <div class="work-visual-frame${hasImage ? ' has-image' : ''}"${hasImage ? '' : ` role="img" aria-label="${escapeHtml(project.title)} project visual placeholder"`}>
+          ${inner}
+        </div>
+      </figure>
+    `;
   }
 
   function renderWorkIndex() {
     return `
       <button class="page-back" type="button" onclick="goBack()">← Back to the network</button>
-      <header class="route-head">
-        <p class="page-kicker">02 — Selected Works</p>
-        <h1 class="page-title">Things I have built</h1>
-        <p class="page-desc">Systems, interaction models, and tools described by their architecture, constraints, and outcomes.</p>
+      <header class="route-head work-head">
+        <p class="page-kicker">02 — Selected Work</p>
+        <h1 class="page-title work-page-title">Selected <em>Work</em></h1>
+        <p class="page-desc">A collection of products, systems and experiments I have worked on. Each case study traces the context, the thinking and the decisions behind the work.</p>
+        <p class="work-access-note">${WORK_LOCK_ICON} Case studies are password protected</p>
       </header>
-      <div class="work-list">
-        ${WORKS.map(work => `
-          <article class="work-item">
-            <button class="work-open" type="button" onclick="openWork('${workSlug(work)}')" aria-label="Open ${escapeHtml(work.title)}">
-              <span class="work-year" aria-hidden="true">${escapeHtml(work.year)}</span>
-              <span class="work-copy">
-                <span class="work-header">
-                  <span class="work-name">${escapeHtml(work.title)}</span>
-                  <span class="work-meta">${escapeHtml(work.role)}</span>
-                </span>
-                <span class="work-desc">${escapeHtml(work.desc)}</span>
-                <span class="work-tags">
-                  ${work.tags.map(tag => `<span class="work-tag">${escapeHtml(tag)}</span>`).join('')}
-                </span>
-                <span class="work-action">View project <span aria-hidden="true">→</span></span>
-              </span>
-            </button>
+      <section class="work-editorial" aria-label="Featured projects">
+        ${WORK_PROJECTS.map(project => `
+          <article class="work-feature work-feature--${project.layout}">
+            ${project.layout === 'lead' ? workVisualHTML(project) : ''}
+            <div class="work-feature-copy">
+              <div class="work-feature-top">
+                <span class="work-feature-index">${escapeHtml(project.index)} / 03</span>
+                <span class="work-feature-category">${escapeHtml(project.category)}</span>
+              </div>
+              <h2 class="work-feature-title">${escapeHtml(project.title)}</h2>
+              <p class="work-feature-desc">${escapeHtml(project.description)}</p>
+              <p class="work-feature-note">${escapeHtml(project.note)}</p>
+              <div class="work-feature-foot">
+                <span class="work-lock">${WORK_LOCK_ICON} Password protected</span>
+                <a class="work-feature-link" href="/work/${escapeHtml(project.slug)}">View case study <span aria-hidden="true">→</span></a>
+              </div>
+            </div>
+            ${project.layout !== 'lead' ? workVisualHTML(project) : ''}
           </article>
         `).join('')}
-      </div>
-    `;
-  }
-
-  function renderWorkDetail(work) {
-    return `
-      <button class="page-back" type="button" onclick="closeWorkDetail()">← All work</button>
-      <article class="detail-page">
-        <header class="route-head">
-          <p class="page-kicker">Selected Work · ${escapeHtml(work.year)}</p>
-          <h1 class="page-title detail-title">${escapeHtml(work.title)}</h1>
-          <p class="detail-lede">${escapeHtml(work.desc)}</p>
-        </header>
-        <dl class="detail-meta">
-          <div><dt>Role</dt><dd>${escapeHtml(work.role)}</dd></div>
-          <div><dt>Year</dt><dd>${escapeHtml(work.year)}</dd></div>
-        </dl>
-        <div class="detail-tags">
-          ${work.tags.map(tag => `<span class="work-tag">${escapeHtml(tag)}</span>`).join('')}
-        </div>
-        <div class="detail-mark" aria-hidden="true">
-          <span>${escapeHtml(work.year)}</span>
-          <span>${escapeHtml(work.title.split('—')[0].trim())}</span>
-        </div>
-      </article>
+      </section>
     `;
   }
 
@@ -1388,20 +1379,17 @@
     page.classList.toggle('featured-mode', route === 'featured');
     page.classList.toggle('hello-mode', route === 'hello');
 
-    let work = null;
     let note = null;
-    if (route === 'work') work = findWork(detail);
     if (route === 'notes') note = findNote(detail);
 
     let title = PAGE_TITLES[route];
-    if (work) title = work.title + ' — Ibrahim Gana';
     if (note) title = note.title + ' — Ibrahim Gana';
     document.title = title;
 
     if (route === 'about') {
       pageInner.innerHTML = renderAboutPage();
     } else if (route === 'work') {
-      pageInner.innerHTML = work ? renderWorkDetail(work) : renderWorkIndex();
+      pageInner.innerHTML = renderWorkIndex();
     } else if (route === 'notes') {
       pageInner.innerHTML = note ? renderNoteDetail(note) : renderNotesIndex();
     } else if (route === 'featured') {
@@ -1445,8 +1433,6 @@
   }
 
   window.goToPage = function (id) { navigate(id); };
-  window.openWork = function (slug) { navigate('work', { detail: slug }); };
-  window.closeWorkDetail = function () { navigate('work'); };
   window.openNote = function (slug) { navigate('notes', { detail: slug }); };
   window.closeNoteDetail = function () { navigate('notes'); };
   window.goBack = function () { if (currentRoute !== 'home') navigate('home'); };

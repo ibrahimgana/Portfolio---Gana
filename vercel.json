@@ -1,5 +1,11 @@
 {
   "rewrites": [
+    { "source": "/work/ubec", "destination": "/api/case-study?project=ubec" },
+    { "source": "/work/ubec/", "destination": "/api/case-study?project=ubec" },
+    { "source": "/work/syteboxx", "destination": "/api/case-study?project=syteboxx" },
+    { "source": "/work/syteboxx/", "destination": "/api/case-study?project=syteboxx" },
+    { "source": "/work/orbit", "destination": "/api/case-study?project=orbit" },
+    { "source": "/work/orbit/", "destination": "/api/case-study?project=orbit" },
     { "source": "/who-am-i", "destination": "/index.html" },
     { "source": "/featured", "destination": "/index.html" },
     { "source": "/notes", "destination": "/index.html" },
@@ -8,6 +14,27 @@
     { "source": "/say-hello", "destination": "/index.html" }
   ],
   "headers": [
+    {
+      "source": "/work/ubec",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    },
+    {
+      "source": "/work/syteboxx",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    },
+    {
+      "source": "/work/orbit",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    },
     {
       "source": "/substack-articles.js",
       "headers": [
