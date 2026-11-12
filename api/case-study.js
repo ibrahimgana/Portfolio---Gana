@@ -260,16 +260,35 @@ function clearSessionCookie(project, secure) {
     (secure ? '; Secure' : '');
 }
 
+function normalizedHost(value) {
+  if (!value) return '';
+  const first = String(value).split(',')[0].trim();
+  if (!first) return '';
+  try {
+    return new URL('https://' + first).host.toLowerCase();
+  } catch (error) {
+    return '';
+  }
+}
+
 function isSameOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
-  const host = req.headers.host;
-  if (!host) return false;
+
+  let originHost;
   try {
-    return new URL(origin).host === host;
+    originHost = new URL(origin).host.toLowerCase();
   } catch (error) {
     return false;
   }
+
+  const hosts = [
+    req.headers.host,
+    req.headers['x-forwarded-host'],
+    req.headers['x-vercel-forwarded-host']
+  ];
+
+  return hosts.some(host => normalizedHost(host) === originHost);
 }
 
 function clientKey(req, project) {
